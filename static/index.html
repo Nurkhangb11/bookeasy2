@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hotel and Car Booking</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 
 <body>
@@ -14,55 +15,13 @@
         <h1>Welcome to Our Booking Platform</h1>
         <nav>
             <ul>
-                <li><a href="#hotel">Book a Hotel</a></li>
-                <li><a href="#car">Book a Car</a></li>
+                <li><a href="hotel.html">Book a Hotel</a></li>
+                <li><a href="car.html">Book a Car</a></li>
                 <li><a href="#contact">Contact Us</a></li>
+                <li><a href="login.html" class="account-link"><i class="fa fa-user"></i> Account</a></li>
             </ul>
         </nav>
     </header>
-
-    <!-- Booking Sections -->
-    <section id="hotel" class="booking-section">
-        <h2>Book a Hotel</h2>
-        <form id="hotelForm">
-            <label for="hotel-destination">Destination:</label>
-            <input type="text" id="hotel-destination" required>
-
-            <label for="hotel-checkin">Check-in:</label>
-            <input type="date" id="hotel-checkin" required>
-
-            <label for="hotel-checkout">Check-out:</label>
-            <input type="date" id="hotel-checkout" required>
-
-            <label for="hotel-guests">Guests:</label>
-            <input type="number" id="hotel-guests" min="1" required>
-
-            <button type="submit">Search Hotels</button>
-        </form>
-    </section>
-
-    <section id="car" class="booking-section">
-        <h2>Book a Car</h2>
-        <form id="carForm">
-            <label for="car-pickup">Pickup Location:</label>
-            <input type="text" id="car-pickup" required>
-
-            <label for="car-pickup-date">Pickup Date:</label>
-            <input type="date" id="car-pickup-date" required>
-
-            <label for="car-dropoff-date">Drop-off Date:</label>
-            <input type="date" id="car-dropoff-date" required>
-
-            <label for="car-type">Car Type:</label>
-            <select id="car-type" required>
-                <option value="economy">Economy</option>
-                <option value="suv">SUV</option>
-                <option value="luxury">Luxury</option>
-            </select>
-
-            <button type="submit">Search Cars</button>
-        </form>
-    </section>
 
     <!-- Contact Section -->
     <section id="contact" class="contact-section">
@@ -80,20 +39,12 @@
 
             <button type="submit">Send Message</button>
         </form>
-
-        <!--<h2>Server Response:</h2>
-        <pre id="response"></pre>
-
-        <script src="script.js"></script> -->
     </section>
-
 
     <!-- Footer -->
     <footer>
         <p>&copy; 2024 Hotel and Car Booking Platform</p>
     </footer>
-
-    <!--<script src="scripts.js"></script> -->
 </body>
 
 </html>
