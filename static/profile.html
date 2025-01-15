@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <section class="profile-section">
+        <h2>Your Profile</h2>
+        <div id="profile">
+            <p>Loading profile...</p>
+        </div>
+        <button id="logoutButton">Logout</button>
+    </section>
+
+    <section>
+        <!-- Форма для отправки сообщения -->
+        <h3>Contact Support</h3>
+        <form id="supportForm" enctype="multipart/form-data">
+            <label for="message">Message:</label>
+            <textarea id="message" placeholder="Enter your message" required></textarea>
+
+            <label for="attachment">Attach a file (optional):</label>
+            <input type="file" id="attachment" name="attachment">
+
+            <button type="submit">Send Message</button>
+        </form>
+        <p><a href="logout.html">Logout</a></p>
+    </section>
+
+    <script>
+        const email = localStorage.getItem('email'); // Получаем email из хранилища
+        if (!email) {
+            window.location.href = "login.html"; // Перенаправляем, если email не найден
+        }
+
+        // Функция для получения данных профиля
+        async function fetchProfile() {
+            const response = await fetch(`http://localhost:8080/profile?email=${email}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const user = await response.json();
+                document.getElementById('profile').innerHTML = `
+                    <p><strong>First Name:</strong> ${user.first_name}</p>
+                    <p><strong>Last Name:</strong> ${user.last_name}</p>
+                    <p><strong>Email:</strong> ${user.email}</p>
+                `;
+            } else {
+                document.getElementById('profile').innerHTML = '<p>Error loading profile. Please try again later.</p>';
+            }
+        }
+
+        // Обработчик формы для отправки сообщения
+        document.getElementById("supportForm").addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const message = document.getElementById("message").value;
+            const attachment = document.getElementById("attachment").files[0];
+
+            const formData = new FormData();
+            formData.append("email", email); // Передаем email из localStorage
+            formData.append("message", message);
+            if (attachment) {
+                formData.append("attachment", attachment);
+            }
+
+            try {
+                const response = await fetch("http://localhost:8080/send-support-message", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                // Проверяем статус ответа
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status === "success") {
+                        alert("Message sent successfully!");
+                    } else {
+                        alert(data.message || "Failed to send message.");
+                    }
+                } else {
+                    const errorText = await response.text();
+                    alert(`Server error: ${errorText}`);
+                }
+            } catch (error) {
+                console.error("Error sending message:", error);
+                alert("An unexpected error occurred. Please try again later.");
+            }
+        });
+
+        // Загружаем профиль при загрузке страницы
+        window.onload = fetchProfile;
+
+        // Логика для выхода из аккаунта
+        document.getElementById('logoutButton').addEventListener('click', function () {
+            localStorage.removeItem('email'); // Удаляем email из хранилища
+            window.location.href = "login.html"; // Перенаправляем на страницу логина
+        });
+    </script>
+</body>
+
+</html>

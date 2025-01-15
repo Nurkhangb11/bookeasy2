@@ -7,24 +7,34 @@
     <title>Register</title>
     <link rel="stylesheet" href="style.css">
     <script>
-        // Функция для регистрации пользователя
         async function registerUser(event) {
             event.preventDefault(); // Отключаем стандартное поведение формы
 
-            const name = document.getElementById("name").value;
+            const firstName = document.getElementById("first_name").value;
+            const lastName = document.getElementById("last_name").value;
             const email = document.getElementById("email").value;
-            const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
+
+            if (!firstName || !lastName || !email || !password) {
+                alert("Пожалуйста, заполните все поля.");
+                return;
+            }
 
             try {
                 const response = await fetch("/register", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ name, email, username, password }),
+                    body: JSON.stringify({ first_name: firstName, last_name: lastName, email: email, password: password }),
                 });
 
                 const result = await response.json();
-                alert(result.message); // Показываем сообщение пользователю
+
+                if (response.ok) {
+                    alert(result.message);
+                    window.location.href = "login.html";
+                } else {
+                    alert(result.message);
+                }
             } catch (error) {
                 console.error("Ошибка при отправке запроса:", error);
                 alert("Ошибка регистрации. Попробуйте снова.");
@@ -37,11 +47,11 @@
     <section class="register-section">
         <h2>Register</h2>
         <form id="registerForm" onsubmit="registerUser(event)">
-            <label for="first_name">First_name:</label>
-            <input type="text" id="first_name" placeholder="Enter your first_name" required>
+            <label for="first_name">First Name:</label>
+            <input type="text" id="first_name" placeholder="Enter your first name" required>
 
-            <label for="last_name">Last_name:</label>
-            <input type="text" id="last_name" placeholder="Enter your last_name" required>
+            <label for="last_name">Last Name:</label>
+            <input type="text" id="last_name" placeholder="Enter your last name" required>
 
             <label for="email">Email:</label>
             <input type="email" id="email" placeholder="Enter your email" required>

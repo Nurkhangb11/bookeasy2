@@ -12,7 +12,7 @@
     <section class="login-section">
         <h2>Login</h2>
         <form id="loginForm">
-            <label for="email">email:</label>
+            <label for="email">Email:</label>
             <input type="text" id="email" placeholder="Enter your email" required>
 
             <label for="password">Password:</label>
@@ -22,6 +22,38 @@
         </form>
         <p>Don't have an account? <a href="register.html">Sign up here</a></p>
     </section>
+
+    <script>
+        document.getElementById("loginForm").addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            const response = await fetch("http://localhost:8080/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    email: email,
+                    password: password,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.status === "success") {
+                alert("Login successful");
+                // Сохраняем email пользователя в localStorage или sessionStorage для использования на странице профиля
+                localStorage.setItem('email', email);
+                // Перенаправляем на страницу профиля
+                window.location.href = "profile.html";
+            } else {
+                alert(data.message);
+            }
+        });
+    </script>
 </body>
 
 </html>

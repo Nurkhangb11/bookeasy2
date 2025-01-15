@@ -120,3 +120,30 @@ carSortSelect?.addEventListener("change", () => {
 });
 
 displayCars(cars);
+
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    let email = document.getElementById('email').value;
+    let password = document.getElementById('password').value;
+
+    fetch('/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email: email, password: password })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === "success") {
+            window.location.href = '/profile'; // Перенаправление на страницу профиля
+        } else {
+            alert(data.message); // Показать сообщение об ошибке
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+    });
+});
+
