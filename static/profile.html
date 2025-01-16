@@ -79,17 +79,17 @@
                     body: formData,
                 });
 
-                // Проверяем статус ответа
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.status === "success") {
-                        alert("Message sent successfully!");
-                    } else {
-                        alert(data.message || "Failed to send message.");
-                    }
-                } else {
+                if (!response.ok) {
                     const errorText = await response.text();
-                    alert(`Server error: ${errorText}`);
+                    alert(`Error from server: ${errorText}`);
+                    return;
+                }
+
+                const data = await response.json();
+                if (data.status === "success") {
+                    alert("Message sent successfully!");
+                } else {
+                    alert(data.message || "Failed to send message.");
                 }
             } catch (error) {
                 console.error("Error sending message:", error);

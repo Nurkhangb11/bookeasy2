@@ -222,13 +222,13 @@ func handleSendSupportMessage(w http.ResponseWriter, r *http.Request) {
 		body := fmt.Sprintf("Email: %s\nMessage: %s", email, message)
 
 		// Настройка SMTP
-		smtpHost := "smtp.gmail.com"
+		smtpHost := "smtp.mail.ru"
 		smtpPort := "587"
-		from := ""
-		password := ""
-		to := []string{""}
+		from := "bookeasy_help@mail.ru"
+		password := "L1sFSSHs1qax2Cy3ssxN"
+		to := []string{"erme.shoinov@bk.ru"}
 
-		auth := smtp.PlainAuth("", from, password, smtpHost)
+		auth := smtp.PlainAuth("erme.shoinov@bk.ru", from, password, smtpHost)
 		msg := []byte("To: \r\n" +
 			"Subject: " + subject + "\r\n" +
 			"\r\n" + body + "\r\n")
