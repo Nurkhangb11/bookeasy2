@@ -84,13 +84,127 @@ hotelSortSelect?.addEventListener("change", () => {
 
 displayHotels(hotels);
 
+
+// Number of cars per page
+const carsPerPage = 3;
+document.addEventListener("DOMContentLoaded", function () {
+    const cars = [
+        { model: "Toyota Corolla", price: 50, rating: 4.5, category: "Sedan", brand: "Toyota" },
+        { model: "Ford Explorer", price: 80, rating: 4.0, category: "SUV", brand: "Ford" },
+        { model: "Tesla Model 3", price: 120, rating: 5.0, category: "Electric", brand: "Tesla" },
+        { model: "Honda Civic", price: 40, rating: 4.2, category: "Sedan", brand: "Honda" },
+        { model: "BMW XM", price: 200, rating: 5, category: "SUV", brand: "BMW" },
+        { model: "Cadillac Escalade", price: 150, rating: 4.8, category: "SUV", brand: "Cadillac" },
+        { model: "Rolls Royce Cullinan", price: 5000, rating: 5, category: "SUV", brand: "Rolls Royce" },
+        { model: "Mercedes G63", price: 300, rating: 4.9, category: "SUV", brand: "Mercedes" },
+        { model: "Mercedes GLE53", price: 150, rating: 4.5, category: "SUV", brand: "Mercedes" },
+        { model: "GMC SLT", price: 100, rating: 4.0, category: "SUV", brand: "GMC" },
+        { model: "Porsche Macan", price: 300, rating: 4.7, category: "SUV", brand: "Porsche" },
+        { model: "Nissan Patrol", price: 100, rating: 4.2, category: "SUV", brand: "Nissan" },
+        { model: "BMW M4 Competition", price: 200, rating: 4.8, category: "Sedan", brand: "BMW" },
+        { model: "Audi RS3", price: 220, rating: 4.6, category: "Sedan", brand: "Audi" },
+        { model: "Audi RS5", price: 270, rating: 4.7, category: "Sedan", brand: "Audi" },
+        { model: "Audi S8", price: 300, rating: 4.9, category: "Sedan", brand: "Audi" },
+        { model: "BMW 730LI", price: 290, rating: 4.6, category: "Sedan", brand: "BMW" },
+        { model: "Mercedes EQE 350", price: 120, rating: 4.5, category: "Electric", brand: "Mercedes" },
+        { model: "Tesla Model 3", price: 120, rating: 5.0, category: "Electric", brand: "Tesla" },
+        { model: "Porsche 718", price: 4718, rating: 4.9, category: "Sports", brand: "Porsche" },
+        { model: "Porsche 911 Turbo S", price: 9000, rating: 5.0, category: "Sports", brand: "Porsche" },
+        { model: "Ferrari F8 Tributo", price: 9999, rating: 5.0, category: "Sports", brand: "Ferrari" },
+        { model: "Audi R8", price: 2000, rating: 4.8, category: "Sports", brand: "Audi" },
+        { model: "Audi RS6", price: 300, rating: 4.7, category: "Sports", brand: "Audi" },
+        { model: "Mercedes V250", price: 2500, rating: 4.6, category: "Van", brand: "Mercedes" }
+    ];
+
+    const carList = document.getElementById("carList");
+    const carCategoryFilter = document.getElementById("carCategory");
+    const carBrandFilter = document.getElementById("carBrand");
+    const carSortFilter = document.getElementById("carSort");
+    const paginationControls = document.getElementById("paginationControls");
+
+    let currentPage = 1;
+    const carsPerPage = 3;
+
+    // Function to display cars
+    function displayCars(filteredCars, page = 1) {
+        carList.innerHTML = "";
+        const startIndex = (page - 1) * carsPerPage;
+        const endIndex = startIndex + carsPerPage;
+        const paginatedCars = filteredCars.slice(startIndex, endIndex);
+
+        paginatedCars.forEach(car => {
+            const carCard = document.createElement("div");
+            carCard.classList.add("col-md-4", "car-card");
+            carCard.innerHTML = `
+                <h3>${car.model}</h3>
+                <p>Price: $${car.price} / day</p>
+                <p>Rating: ${car.rating} stars</p>
+            `;
+            carList.appendChild(carCard);
+        });
+
+        renderPagination(filteredCars.length, page);
+    }
+
+    // Function to render pagination controls
+    // Function to render pagination controls
+function renderPagination(totalCars, currentPage) {
+    const totalPages = Math.ceil(totalCars / carsPerPage);
+    paginationControls.innerHTML = "";
+
+    if (totalPages > 1) {
+        for (let i = 1; i <= totalPages; i++) {
+            const button = document.createElement("button");
+            button.classList.add("btn", "mx-1");
+            button.textContent = i;
+            button.onclick = () => {
+                currentPage = i;
+                filterCars(currentPage);
+            };
+            if (i === currentPage) {
+                button.classList.add("active");
+            }
+            paginationControls.appendChild(button);
+        }
+    }
+}
+
+
+    // Filter and sort function
+    function filterCars(page = 1) {
+        const selectedCategory = carCategoryFilter.value;
+        const selectedBrand = carBrandFilter.value;
+
+        let filteredCars = cars.filter(car => {
+            const categoryMatch = selectedCategory === "All Categories" || car.category === selectedCategory;
+            const brandMatch = selectedBrand === "All Brands" || car.brand === selectedBrand;
+            return categoryMatch && brandMatch;
+        });
+
+        const selectedSort = carSortFilter.value;
+        if (selectedSort === "rating") {
+            filteredCars = filteredCars.sort((a, b) => b.rating - a.rating);
+        } else if (selectedSort === "price") {
+            filteredCars = filteredCars.sort((a, b) => a.price - b.price);
+        }
+
+        displayCars(filteredCars, page);
+    }
+
+    // Event listeners for filters
+    carCategoryFilter.addEventListener("change", () => filterCars(currentPage));
+    carBrandFilter.addEventListener("change", () => filterCars(currentPage));
+    carSortFilter.addEventListener("change", () => filterCars(currentPage));
+
+    // Initial display of cars
+    filterCars();
+});
+
+
+
+
 // Динамическое отображение автомобилей
-const cars = [
-    { model: "Toyota Corolla", price: 50, rating: 4.5 },
-    { model: "Ford Explorer", price: 80, rating: 4.0 },
-    { model: "Tesla Model 3", price: 120, rating: 5.0 },
-    { model: "Honda Civic", price: 40, rating: 4.2 },
-];
+
 
 const carList = document.getElementById("carList");
 const carSortSelect = document.getElementById("sortCars");
@@ -204,70 +318,4 @@ document.addEventListener("DOMContentLoaded", () => {
     // Initial render
     renderHotels(hotels);
 });
-
-// Filter cars based on category
-document.getElementById('categoryFilter').addEventListener('change', function() {
-    const category = this.value;
-    const cars = document.querySelectorAll('.car-card');
-    cars.forEach(car => {
-        car.style.display = (category === 'all' || car.getAttribute('data-category') === category) ? 'block' : 'none';
-    });
-});
-
-// Обработка кликов по звездам для рейтинга
-document.querySelectorAll('.rating').forEach(rating => {
-    const stars = rating.querySelectorAll('.star');
-    const ratingValueDisplay = rating.querySelector('.rating-value');
-
-    stars.forEach(star => {
-        star.addEventListener('click', function () {
-            const selectedValue = this.getAttribute('data-value');
-
-            // Снимаем выделение со всех звезд
-            stars.forEach(star => star.classList.remove('selected'));
-
-            // Выделяем звезды до выбранной включительно
-            for (let i = 0; i < selectedValue; i++) {
-                stars[i].classList.add('selected');
-            }
-
-            // Обновляем числовое значение рейтинга
-            ratingValueDisplay.textContent = `${selectedValue}/5`;
-        });
-    });
-});
-// Переключение видимости дополнительного контента
-document.querySelectorAll('.details-btn').forEach(button => {
-    button.addEventListener('click', () => {
-        const extraContent = button.nextElementSibling;
-        if (extraContent.style.display === 'none' || extraContent.style.display === '') {
-            extraContent.style.display = 'block';
-            button.textContent = 'Скрыть';
-        } else {
-            extraContent.style.display = 'none';
-            button.textContent = 'Подробнее';
-        }
-    });
-});
-// Функция фильтрации по категории и бренду
-function filterCars() {
-    const selectedCategory = document.getElementById('categoryFilter').value;
-    const selectedBrand = document.getElementById('brandFilter').value;
-
-    document.querySelectorAll('.car-card').forEach(car => {
-        const carCategory = car.getAttribute('data-category');
-        const carBrand = car.getAttribute('data-brand');
-
-        // Проверка условий фильтрации
-        const categoryMatch = (selectedCategory === 'all' || carCategory === selectedCategory);
-        const brandMatch = (selectedBrand === 'all' || carBrand === selectedBrand);
-
-        // Показываем или скрываем карточки, если совпадают оба условия
-        car.style.display = (categoryMatch && brandMatch) ? 'block' : 'none';
-    });
-}
-
-// Привязка функции фильтрации к изменениям в выпадающих списках
-document.getElementById('categoryFilter').addEventListener('change', filterCars);
-document.getElementById('brandFilter').addEventListener('change', filterCars);
 
