@@ -66,6 +66,9 @@ func main() {
 	http.HandleFunc("/login", handleLogin)
 	http.HandleFunc("/profile", handleProfile)
 	http.HandleFunc("/send-support-message", handleSendSupportMessage)
+	http.HandleFunc("/send-chat-message", handleSendMessage)
+	http.HandleFunc("/messages", handleSelectMessages)
+	http.HandleFunc("/clear-messages", handleClearMessages)
 
 	// Запуск сервера
 	fmt.Println("Сервер запущен на http://localhost:8080")
@@ -160,7 +163,7 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 func handleProfile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	// Проверяем, что метод POST
+	// Проверяем, что метод GET
 	if r.Method == http.MethodGet {
 		// Получаем email из заголовка запроса или из сессии (зависит от реализации аутентификации)
 		// Для простоты примем, что email передается в заголовке запроса
@@ -248,4 +251,114 @@ func handleSendSupportMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+}
+
+// Обработчик для добавления сообщения через хэлпдеск
+func handleSendMessage(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method == http.MethodPost {
+		var requestData struct {
+			Message string `json:"message"` // Используем "message", чтобы соответствовать клиентскому запросу
+		}
+
+		// Декодируем данные из запроса
+		err := json.NewDecoder(r.Body).Decode(&requestData)
+		if err != nil || requestData.Message == "" {
+			log.Println("Некорректные данные формы:", err)
+			http.Error(w, `{"status":"fail","message":"Некорректные данные формы"}`, http.StatusBadRequest)
+			return
+		}
+
+		// Сохраняем сообщение в таблицу `messages`
+		_, err = db.Exec("INSERT INTO messages (content) VALUES ($1)", requestData.Message)
+		if err != nil {
+			log.Println("Ошибка сохранения данных в базу данных:", err)
+			http.Error(w, `{"status":"error","message":"Ошибка сохранения данных"}`, http.StatusInternalServerError)
+			return
+		}
+
+		// Успешный ответ
+		response := map[string]string{
+			"status":  "success",
+			"message": "Сообщение успешно отправлено",
+		}
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			log.Println("Ошибка кодирования ответа:", err)
+			http.Error(w, `{"status":"error","message":"Ошибка формирования ответа"}`, http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// Если метод не поддерживается
+	log.Println("Метод не поддерживается:", r.Method)
+	http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
+}
+
+// Обработчик для SELECT (все сообщения)
+func handleSelectMessages(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method == http.MethodGet {
+		// Изменяем запрос, чтобы использовать таблицу `messages`
+		rows, err := db.Query("SELECT id, content FROM messages")
+		if err != nil {
+			log.Println("Ошибка запроса к базе данных:", err)
+			http.Error(w, `{"status":"error","message":"Ошибка получения данных"}`, http.StatusInternalServerError)
+			return
+		}
+		defer rows.Close()
+
+		var messages []struct {
+			ID      int    `json:"id"`
+			Content string `json:"content"`
+		}
+
+		for rows.Next() {
+			var msg struct {
+				ID      int    `json:"id"`
+				Content string `json:"content"`
+			}
+			if err := rows.Scan(&msg.ID, &msg.Content); err != nil {
+				log.Println("Ошибка обработки строки:", err)
+				http.Error(w, `{"status":"error","message":"Ошибка обработки данных"}`, http.StatusInternalServerError)
+				return
+			}
+			messages = append(messages, msg)
+		}
+
+		if err := rows.Err(); err != nil {
+			log.Println("Ошибка итерации строк:", err)
+			http.Error(w, `{"status":"error","message":"Ошибка обработки данных"}`, http.StatusInternalServerError)
+			return
+		}
+
+		// Отправляем данные в формате JSON
+		json.NewEncoder(w).Encode(messages)
+		return
+	}
+
+	http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
+}
+
+// Обработчик для очистки всех сообщений
+func handleClearMessages(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method == http.MethodPost {
+		_, err := db.Exec("DELETE FROM support_messages")
+		if err != nil {
+			http.Error(w, `{"status":"error","message":"Ошибка очистки данных"}`, http.StatusInternalServerError)
+			return
+		}
+
+		response := map[string]string{
+			"status":  "success",
+			"message": "Сообщения успешно очищены",
+		}
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
 }
