@@ -1,34 +1,673 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book a Car</title>
+    <title>Available Cars | Car Rentals</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-
 <body>
-    <header>
-        <h1>Book a Car</h1>
-    </header>
+<!-- Header -->
+<header>
+    <h1>Book a Car
+    </h1>
+    <nav>
+        <ul>
+            <li><a href="hotel.html">Book a Hotel</a></li>
+            <li><a href="car.html">Book a Car</a></li>
+            <li><a href="#contact">Contact Us</a></li>
+            <li><a href="login.html" class="account-link"><i class="fa fa-user"></i> Account</a></li>
+        </ul>
+    </nav>
+</header>
 
-    <section class="car-section">
-        <h2>Available Cars</h2>
-        <label for="sortCars">Sort by:</label>
-        <select id="sortCars">
-            <option value="price">Price</option>
-            <option value="rating">Rating</option>
-            <option value="model">Model</option>
-        </select>
-        <div id="carList"></div>
+
+
+<main>
+    <section id="available-cars">
+        <h1>Available Cars</h1>
+
+        <!-- Filter Section -->
+        <div class="container mb-4">
+            <div class="row">
+                <div class="col-md-4">
+                    <!-- Список фильтра -->
+                    <select id="categoryFilter" class="form-select">
+                        <option value="all">All Categories</option>
+                        <option value="suv">SUV</option>
+                        <option value="sedan">Sedan</option>
+                        <option value="electric">Electric</option>
+                        <option value="sports">Sports</option>
+                        <option value="van">Minivan</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <select id="brandFilter" class="form-select">
+                        <option value="all">All Brands</option>
+                        <option value="Porsche">Porsche</option>
+                        <option value="Ferrari">Ferrari</option>
+                        <option value="BMW">BMW</option>
+                        <option value="Mercedes">Mercedes</option>
+                        <option value="Tesla">Tesla</option>
+                        <option value="GMC">GMC</option>
+                        <option value="Cadillac">Cadillac</option>
+                        <option value="Rolls Royce">Rolls Royce</option>
+                        <option value="Nissan">Nissan</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Cars List -->
+        <div class="container">
+            <div class="row" id="carList">
+                <!-- SUV Category -->
+                <div class="col-md-4 mb-4 car-card" data-category="suv" data-brand="BMW">
+                    <div class="card h-100">
+                        <img src="img/bmw%20xm.png" class="card-img-top" alt="SUV Car">
+                        <div class="card-body">
+                            <h5 class="card-title">BMW XM</h5>
+                            <p class="card-text">Price: $200/day</p>
+                            <a href="#" class="btn btn-dark">Rent Now</a>
+
+                            <!-- Кнопка "Подробнее" -->
+                            <button class="btn btn-outline-secondary mt-2 details-btn">Подробнее</button>
+
+                            <!-- Скрытый дополнительный контент -->
+                            <div class="extra-content" style="display: none;">
+                                <p>Новый BMW XM — воплощение мощности и элегантности. Этот внедорожник премиум-класса предлагает уникальные характеристики и передовые технологии, делая каждую поездку комфортной и незабываемой. Подходит как для городских дорог, так и для загородных путешествий.</p>
+                            </div>
+
+                            <!-- Рейтинг -->
+                            <div class="rating">
+                                <span class="star" data-value="1">&#9733;</span>
+                                <span class="star" data-value="2">&#9733;</span>
+                                <span class="star" data-value="3">&#9733;</span>
+                                <span class="star" data-value="4">&#9733;</span>
+                                <span class="star" data-value="5">&#9733;</span>
+                                <span class="rating-value">0/5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4 car-card" data-category="suv" data-brand="Cadillac">
+                    <div class="card h-100">
+                        <img src="img/escalade.png" class="card-img-top" alt="SUV Car">
+                        <div class="card-body">
+                            <h5 class="card-title">Cadillac Escalade</h5>
+                            <p class="card-text">Price: $150/day</p>
+                            <a href="#" class="btn btn-dark">Rent Now</a>
+
+                            <!-- Кнопка "Подробнее" -->
+                            <button class="btn btn-outline-secondary mt-2 details-btn">Подробнее</button>
+
+                            <!-- Скрытый дополнительный контент -->
+                            <div class="extra-content" style="display: none;">
+                                <p>Cadillac Escalade сочетает в себе мощь и простор. Он идеально подходит для длительных поездок с семьей или друзьями. Великолепная отделка салона и современное оснащение делают его одним из лучших внедорожников на рынке.</p>
+                            </div>
+
+                            <!-- Рейтинг -->
+                            <div class="rating">
+                                <span class="star" data-value="1">&#9733;</span>
+                                <span class="star" data-value="2">&#9733;</span>
+                                <span class="star" data-value="3">&#9733;</span>
+                                <span class="star" data-value="4">&#9733;</span>
+                                <span class="star" data-value="5">&#9733;</span>
+                                <span class="rating-value">0/5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4 car-card" data-category="suv" data-brand="Rolls Royce">
+                    <div class="card h-100">
+                        <img src="img/cullinan.png" class="card-img-top" alt="SUV Car">
+                        <div class="card-body">
+                            <h5 class="card-title">Rolls Royce Cullinan</h5>
+                            <p class="card-text">Price: $5000/day</p>
+                            <a href="#" class="btn btn-dark">Rent Now</a>
+
+                            <!-- Кнопка "Подробнее" -->
+                            <button class="btn btn-outline-secondary mt-2 details-btn">Подробнее</button>
+
+                            <!-- Скрытый дополнительный контент -->
+                            <div class="extra-content" style="display: none;">
+                                <p>Rolls Royce Cullinan — символ роскоши и престижа. Этот автомобиль предлагает непревзойденный уровень комфорта и безопасности. Подходит для важных событий и деловых встреч, где важен стиль и статус.</p>
+                            </div>
+
+                            <!-- Рейтинг -->
+                            <div class="rating">
+                                <span class="star" data-value="1">&#9733;</span>
+                                <span class="star" data-value="2">&#9733;</span>
+                                <span class="star" data-value="3">&#9733;</span>
+                                <span class="star" data-value="4">&#9733;</span>
+                                <span class="star" data-value="5">&#9733;</span>
+                                <span class="rating-value">0/5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4 car-card" data-category="suv" data-brand="Mercedes">
+                    <div class="card h-100">
+                        <img src="img/g63.png" class="card-img-top" alt="SUV Car">
+                        <div class="card-body">
+                            <h5 class="card-title">Mercedes G63</h5>
+                            <p class="card-text">Price: $300/day</p>
+                            <a href="#" class="btn btn-dark">Rent Now</a>
+
+                            <!-- Кнопка "Подробнее" -->
+                            <button class="btn btn-outline-secondary mt-2 details-btn">Подробнее</button>
+
+                            <!-- Скрытый дополнительный контент -->
+                            <div class="extra-content" style="display: none;">
+                                <p>Mercedes G63 — это сочетание агрессивного дизайна и высоких технологий. Он легко справляется с любыми дорожными условиями и обеспечивает комфорт даже на сложных маршрутах. Подходит для тех, кто ищет стильный и мощный внедорожник.</p>
+                            </div>
+
+                            <!-- Рейтинг -->
+                            <div class="rating">
+                                <span class="star" data-value="1">&#9733;</span>
+                                <span class="star" data-value="2">&#9733;</span>
+                                <span class="star" data-value="3">&#9733;</span>
+                                <span class="star" data-value="4">&#9733;</span>
+                                <span class="star" data-value="5">&#9733;</span>
+                                <span class="rating-value">0/5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4 car-card" data-category="suv" data-brand="Mercedes">
+                    <div class="card h-100">
+                        <img src="img/gle53.png" class="card-img-top" alt="SUV Car">
+                        <div class="card-body">
+                            <h5 class="card-title">Mercedes GLE53</h5>
+                            <p class="card-text">Price: $150/day</p>
+                            <a href="#" class="btn btn-dark">Rent Now</a>
+
+                            <!-- Кнопка "Подробнее" -->
+                            <button class="btn btn-outline-secondary mt-2 details-btn">Подробнее</button>
+
+                            <!-- Скрытый дополнительный контент -->
+                            <div class="extra-content" style="display: none;">
+                                <p>Mercedes GLE53 — спортивный и стильный кроссовер с динамическими характеристиками. Оснащен мощным двигателем и передовыми системами безопасности, он подходит для любых дорожных условий.</p>
+                            </div>
+
+                            <!-- Рейтинг -->
+                            <div class="rating">
+                                <span class="star" data-value="1">&#9733;</span>
+                                <span class="star" data-value="2">&#9733;</span>
+                                <span class="star" data-value="3">&#9733;</span>
+                                <span class="star" data-value="4">&#9733;</span>
+                                <span class="star" data-value="5">&#9733;</span>
+                                <span class="rating-value">0/5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4 car-card" data-category="suv" data-brand="GMC">
+                    <div class="card h-100">
+                        <img src="img/gmc%20slt.png" class="card-img-top" alt="SUV Car">
+                        <div class="card-body">
+                            <h5 class="card-title">GMC SLT</h5>
+                            <p class="card-text">Price: $100/day</p>
+                            <a href="#" class="btn btn-dark">Rent Now</a>
+                            <!-- Кнопка "Подробнее" -->
+                            <button class="btn btn-outline-secondary mt-2 details-btn">Подробнее</button>
+
+                            <!-- Скрытый дополнительный контент -->
+                            <div class="extra-content" style="display: none;">
+                                <p>GMC SLT — мощный автомобиль, созданный для надежных поездок по городу и за его пределами. Просторный и удобный салон делает его отличным выбором для семейных путешествий.</p>
+                            </div>
+
+                            <!-- Рейтинг -->
+                            <div class="rating">
+                                <span class="star" data-value="1">&#9733;</span>
+                                <span class="star" data-value="2">&#9733;</span>
+                                <span class="star" data-value="3">&#9733;</span>
+                                <span class="star" data-value="4">&#9733;</span>
+                                <span class="star" data-value="5">&#9733;</span>
+                                <span class="rating-value">0/5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4 car-card" data-category="suv" data-brand="Porsche">
+                    <div class="card h-100">
+                        <img src="img/macan.png" class="card-img-top" alt="SUV Car">
+                        <div class="card-body">
+                            <h5 class="card-title">Porsche Macan</h5>
+                            <p class="card-text">Price: $300/day</p>
+                            <a href="#" class="btn btn-dark">Rent Now</a>
+                            <!-- Кнопка "Подробнее" -->
+                            <button class="btn btn-outline-secondary mt-2 details-btn">Подробнее</button>
+
+                            <!-- Скрытый дополнительный контент -->
+                            <div class="extra-content" style="display: none;">
+                                <p>Porsche Macan — компактный и маневренный кроссовер с фирменным спортивным характером. Отличный выбор для тех, кто ценит динамику и комфорт в повседневной жизни.</p>
+                            </div>
+
+                            <!-- Рейтинг -->
+                            <div class="rating">
+                                <span class="star" data-value="1">&#9733;</span>
+                                <span class="star" data-value="2">&#9733;</span>
+                                <span class="star" data-value="3">&#9733;</span>
+                                <span class="star" data-value="4">&#9733;</span>
+                                <span class="star" data-value="5">&#9733;</span>
+                                <span class="rating-value">0/5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-4 car-card" data-category="suv" data-brand="Nissan">
+                    <div class="card h-100">
+                        <img src="img/patrol.png" class="card-img-top" alt="SUV Car">
+                        <div class="card-body">
+                            <h5 class="card-title">Nissan Patrol</h5>
+                            <p class="card-text">Price: $100/day</p>
+                            <a href="#" class="btn btn-dark">Rent Now</a>
+                            <!-- Кнопка "Подробнее" -->
+                            <button class="btn btn-outline-secondary mt-2 details-btn">Подробнее</button>
+
+                            <!-- Скрытый дополнительный контент -->
+                            <div class="extra-content" style="display: none;">
+                                <p>Nissan Patrol — легендарный внедорожник с мощными характеристиками и комфортным салоном. Подходит для длительных путешествий и приключений на природе.</p>
+                            </div>
+
+                            <!-- Рейтинг -->
+                            <div class="rating">
+                                <span class="star" data-value="1">&#9733;</span>
+                                <span class="star" data-value="2">&#9733;</span>
+                                <span class="star" data-value="3">&#9733;</span>
+                                <span class="star" data-value="4">&#9733;</span>
+                                <span class="star" data-value="5">&#9733;</span>
+                                <span class="rating-value">0/5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sedan Category -->
+                <div class="col-md-4 mb-4 car-card" data-category="sedan" data-brand="BWM">
+                    <div class="card h-100">
+                        <img src="img/m4compition.png" class="card-img-top" alt="Sedan Car">
+                        <div class="card-body">
+                            <h5 class="card-title">BMW M4 Competition</h5>
+                            <p class="card-text">Price: $200/day</p>
+                            <a href="#" class="btn btn-dark">Rent Now</a>
+
+                            <!-- Кнопка "Подробнее" -->
+                            <button class="btn btn-outline-secondary mt-2 details-btn">Подробнее</button>
+
+                            <!-- Скрытый дополнительный контент -->
+                            <div class="extra-content" style="display: none;">
+                                <p>BMW M4 Competition — это спортивный автомобиль с впечатляющей динамикой и фирменной управляемостью BMW. Подходит для тех, кто ищет адреналин и высокие скорости.</p>
+                            </div>
+
+                            <!-- Рейтинг -->
+                            <div class="rating">
+                                <span class="star" data-value="1">&#9733;</span>
+                                <span class="star" data-value="2">&#9733;</span>
+                                <span class="star" data-value="3">&#9733;</span>
+                                <span class="star" data-value="4">&#9733;</span>
+                                <span class="star" data-value="5">&#9733;</span>
+                                <span class="rating-value">0/5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4 car-card" data-category="sedan" data-brand="Audi">
+                    <div class="card h-100">
+                        <img src="img/rs3.png" class="card-img-top" alt="Sedan Car">
+                        <div class="card-body">
+                            <h5 class="card-title">Audi RS3</h5>
+                            <p class="card-text">Price: $220/day</p>
+                            <a href="#" class="btn btn-dark">Rent Now</a>
+
+                            <!-- Кнопка "Подробнее" -->
+                            <button class="btn btn-outline-secondary mt-2 details-btn">Подробнее</button>
+
+                            <!-- Скрытый дополнительный контент -->
+                            <div class="extra-content" style="display: none;">
+                                <p>Audi RS3 — это мощный спортивный автомобиль с невероятной управляемостью и стильным дизайном. Идеален для любителей динамичной езды и городских поездок.</p>
+                            </div>
+
+                            <!-- Рейтинг -->
+                            <div class="rating">
+                                <span class="star" data-value="1">&#9733;</span>
+                                <span class="star" data-value="2">&#9733;</span>
+                                <span class="star" data-value="3">&#9733;</span>
+                                <span class="star" data-value="4">&#9733;</span>
+                                <span class="star" data-value="5">&#9733;</span>
+                                <span class="rating-value">0/5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4 car-card" data-category="sedan" data-brand="Audi">
+                    <div class="card h-100">
+                        <img src="img/rs5.png" class="card-img-top" alt="Sedan Car">
+                        <div class="card-body">
+                            <h5 class="card-title">Audi RS5</h5>
+                            <p class="card-text">Price: $270/day</p>
+                            <a href="#" class="btn btn-dark">Rent Now</a>
+
+                            <!-- Кнопка "Подробнее" -->
+                            <button class="btn btn-outline-secondary mt-2 details-btn">Подробнее</button>
+
+                            <!-- Скрытый дополнительный контент -->
+                            <div class="extra-content" style="display: none;">
+                                <p>Audi RS5 предлагает высокую производительность и элегантный внешний вид. Подходит для поездок по городу и трассе, где можно насладиться мощью автомобиля.</p>
+                            </div>
+
+                            <!-- Рейтинг -->
+                            <div class="rating">
+                                <span class="star" data-value="1">&#9733;</span>
+                                <span class="star" data-value="2">&#9733;</span>
+                                <span class="star" data-value="3">&#9733;</span>
+                                <span class="star" data-value="4">&#9733;</span>
+                                <span class="star" data-value="5">&#9733;</span>
+                                <span class="rating-value">0/5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4 car-card" data-category="sedan" data-brand="Audi">
+                    <div class="card h-100">
+                        <img src="img/s8.png" class="card-img-top" alt="Sedan Car">
+                        <div class="card-body">
+                            <h5 class="card-title">Audi S8</h5>
+                            <p class="card-text">Price: $300/day</p>
+                            <a href="#" class="btn btn-dark">Rent Now</a>
+
+                            <!-- Кнопка "Подробнее" -->
+                            <button class="btn btn-outline-secondary mt-2 details-btn">Подробнее</button>
+
+                            <!-- Скрытый дополнительный контент -->
+                            <div class="extra-content" style="display: none;">
+                                <p>Audi S8 — роскошный седан с превосходной динамикой. Он предлагает максимальный комфорт и стильный дизайн, что делает его отличным выбором для деловых поездок.</p>
+                            </div>
+
+                            <!-- Рейтинг -->
+                            <div class="rating">
+                                <span class="star" data-value="1">&#9733;</span>
+                                <span class="star" data-value="2">&#9733;</span>
+                                <span class="star" data-value="3">&#9733;</span>
+                                <span class="star" data-value="4">&#9733;</span>
+                                <span class="star" data-value="5">&#9733;</span>
+                                <span class="rating-value">0/5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4 car-card" data-category="sedan" data-brand="BMW">
+                    <div class="card h-100">
+                        <img src="img/730li.png" class="card-img-top" alt="Sedan Car">
+                        <div class="card-body">
+                            <h5 class="card-title">BMW 730LI</h5>
+                            <p class="card-text">Price: $290/day</p>
+                            <a href="#" class="btn btn-dark">Rent Now</a>
+
+                            <!-- Кнопка "Подробнее" -->
+                            <button class="btn btn-outline-secondary mt-2 details-btn">Подробнее</button>
+
+                            <!-- Скрытый дополнительный контент -->
+                            <div class="extra-content" style="display: none;">
+                                <p>BMW 730LI — седан премиум-класса, предлагающий комфорт и передовые технологии. Идеален для долгих поездок и деловых встреч.</p>
+                            </div>
+
+                            <!-- Рейтинг -->
+                            <div class="rating">
+                                <span class="star" data-value="1">&#9733;</span>
+                                <span class="star" data-value="2">&#9733;</span>
+                                <span class="star" data-value="3">&#9733;</span>
+                                <span class="star" data-value="4">&#9733;</span>
+                                <span class="star" data-value="5">&#9733;</span>
+                                <span class="rating-value">0/5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Electric Category -->
+                <div class="col-md-4 mb-4 car-card" data-category="electric" data-brand="Mercedes">
+                    <div class="card h-100">
+                        <img src="img/eqe350.png" class="card-img-top" alt="Electric Car">
+                        <div class="card-body">
+                            <h5 class="card-title">Mersedes EQE 350</h5>
+                            <p class="card-text">Price: $120/day</p>
+                            <a href="#" class="btn btn-dark">Rent Now</a>
+
+                            <!-- Кнопка "Подробнее" -->
+                            <button class="btn btn-outline-secondary mt-2 details-btn">Подробнее</button>
+
+                            <!-- Скрытый дополнительный контент -->
+                            <div class="extra-content" style="display: none;">
+                                <p>Mercedes EQE 350 — электрический седан, сочетающий элегантность и экологичность. Подходит для городских поездок и долгих путешествий на одном заряде.</p>
+                            </div>
+
+                            <!-- Рейтинг -->
+                            <div class="rating">
+                                <span class="star" data-value="1">&#9733;</span>
+                                <span class="star" data-value="2">&#9733;</span>
+                                <span class="star" data-value="3">&#9733;</span>
+                                <span class="star" data-value="4">&#9733;</span>
+                                <span class="star" data-value="5">&#9733;</span>
+                                <span class="rating-value">0/5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4 car-card" data-category="electric" data-brand="Tesla">
+                    <div class="card h-100">
+                        <img src="img/model3.png" class="card-img-top" alt="Electric Car">
+                        <div class="card-body">
+                            <h5 class="card-title">Tesla Model 3</h5>
+                            <p class="card-text">Price: $120/day</p>
+                            <a href="#" class="btn btn-dark">Rent Now</a>
+
+                            <!-- Кнопка "Подробнее" -->
+                            <button class="btn btn-outline-secondary mt-2 details-btn">Подробнее</button>
+
+                            <!-- Скрытый дополнительный контент -->
+                            <div class="extra-content" style="display: none;">
+                                <p>Tesla Model 3 — это будущее автомобильной индустрии. Экологичный и высокотехнологичный, он идеально подходит для города и дальних поездок благодаря продвинутой системе автопилота.</p>
+                            </div>
+
+                            <!-- Рейтинг -->
+                            <div class="rating">
+                                <span class="star" data-value="1">&#9733;</span>
+                                <span class="star" data-value="2">&#9733;</span>
+                                <span class="star" data-value="3">&#9733;</span>
+                                <span class="star" data-value="4">&#9733;</span>
+                                <span class="star" data-value="5">&#9733;</span>
+                                <span class="rating-value">0/5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sports Category -->
+                <div class="col-md-4 mb-4 car-card" data-category="sports" data-brand="Porsche">
+                    <div class="card h-100">
+                        <img src="img/718.png" class="card-img-top" alt="Sports Car">
+                        <div class="card-body">
+                            <h5 class="card-title">Porsche 718</h5>
+                            <p class="card-text">Price: $4718/day</p>
+                            <a href="#" class="btn btn-dark">Rent Now</a>
+
+                            <!-- Кнопка "Подробнее" -->
+                            <button class="btn btn-outline-secondary mt-2 details-btn">Подробнее</button>
+
+                            <!-- Скрытый дополнительный контент -->
+                            <div class="extra-content" style="display: none;">
+                                <p>Porsche 718 — компактный и спортивный автомобиль для настоящих ценителей драйва. Подходит для любителей высоких скоростей и адреналина.</p>
+                            </div>
+
+                            <!-- Рейтинг -->
+                            <div class="rating">
+                                <span class="star" data-value="1">&#9733;</span>
+                                <span class="star" data-value="2">&#9733;</span>
+                                <span class="star" data-value="3">&#9733;</span>
+                                <span class="star" data-value="4">&#9733;</span>
+                                <span class="star" data-value="5">&#9733;</span>
+                                <span class="rating-value">0/5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4 car-card" data-category="sports" data-brand="Porsche">
+                    <div class="card h-100">
+                        <img src="img/911.png" class="card-img-top" alt="Sports Car">
+                        <div class="card-body">
+                            <h5 class="card-title">Porsche 911 Turbo S</h5>
+                            <p class="card-text">Price: $9000/day</p>
+                            <a href="#" class="btn btn-dark">Rent Now</a>
+
+                            <!-- Кнопка "Подробнее" -->
+                            <button class="btn btn-outline-secondary mt-2 details-btn">Подробнее</button>
+
+                            <!-- Скрытый дополнительный контент -->
+                            <div class="extra-content" style="display: none;">
+                                <p>Porsche 911 Turbo S — это символ скорости и совершенства. С мощным двигателем и превосходной управляемостью, он подходит для тех, кто стремится к максимальному комфорту и динамике.</p>
+                            </div>
+
+                            <!-- Рейтинг -->
+                            <div class="rating">
+                                <span class="star" data-value="1">&#9733;</span>
+                                <span class="star" data-value="2">&#9733;</span>
+                                <span class="star" data-value="3">&#9733;</span>
+                                <span class="star" data-value="4">&#9733;</span>
+                                <span class="star" data-value="5">&#9733;</span>
+                                <span class="rating-value">0/5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4 car-card" data-category="sports" data-brand="Ferrari">
+                    <div class="card h-100">
+                        <img src="img/ferrari%20f8.png" class="card-img-top" alt="Sports Car">
+                        <div class="card-body">
+                            <h5 class="card-title">Ferrari F8 Tributo</h5>
+                            <p class="card-text">Price: $9999/day</p>
+                            <a href="#" class="btn btn-dark">Rent Now</a>
+
+                            <!-- Кнопка "Подробнее" -->
+                            <button class="btn btn-outline-secondary mt-2 details-btn">Подробнее</button>
+
+                            <!-- Скрытый дополнительный контент -->
+                            <div class="extra-content" style="display: none;">
+                                <p>Ferrari F8 Tributo — идеальное сочетание мощности и элегантности. Спортивный автомобиль для тех, кто ищет невероятные эмоции на дороге.</p>
+                            </div>
+
+                            <!-- Рейтинг -->
+                            <div class="rating">
+                                <span class="star" data-value="1">&#9733;</span>
+                                <span class="star" data-value="2">&#9733;</span>
+                                <span class="star" data-value="3">&#9733;</span>
+                                <span class="star" data-value="4">&#9733;</span>
+                                <span class="star" data-value="5">&#9733;</span>
+                                <span class="rating-value">0/5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4 car-card" data-category="sports" data-brand="Audi">
+                    <div class="card h-100">
+                        <img src="img/r8.png" class="card-img-top" alt="Sports Car">
+                        <div class="card-body">
+                            <h5 class="card-title">Audi R8</h5>
+                            <p class="card-text">Price: $2000/day</p>
+                            <a href="#" class="btn btn-dark">Rent Now</a>
+
+                            <!-- Кнопка "Подробнее" -->
+                            <button class="btn btn-outline-secondary mt-2 details-btn">Подробнее</button>
+
+                            <!-- Скрытый дополнительный контент -->
+                            <div class="extra-content" style="display: none;">
+                                <p>Audi R8 — мощный и стильный суперкар с впечатляющими характеристиками. Подходит для тех, кто любит выделяться и ценит высокие скорости.</p>
+                            </div>
+
+                            <!-- Рейтинг -->
+                            <div class="rating">
+                                <span class="star" data-value="1">&#9733;</span>
+                                <span class="star" data-value="2">&#9733;</span>
+                                <span class="star" data-value="3">&#9733;</span>
+                                <span class="star" data-value="4">&#9733;</span>
+                                <span class="star" data-value="5">&#9733;</span>
+                                <span class="rating-value">0/5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4 car-card" data-category="sports" data-brand="Audi">
+                    <div class="card h-100">
+                        <img src="img/rs6.png" class="card-img-top" alt="Sports Car">
+                        <div class="card-body">
+                            <h5 class="card-title">Audi RS6</h5>
+                            <p class="card-text">Price: $300/day</p>
+                            <a href="#" class="btn btn-dark">Rent Now</a>
+
+                            <!-- Кнопка "Подробнее" -->
+                            <button class="btn btn-outline-secondary mt-2 details-btn">Подробнее</button>
+
+                            <!-- Скрытый дополнительный контент -->
+                            <div class="extra-content" style="display: none;">
+                                <p>Audi RS6 — спортивный универсал с мощным двигателем и комфортным салоном. Подходит для семейных поездок и длительных путешествий с максимальным комфортом.</p>
+                            </div>
+
+                            <!-- Рейтинг -->
+                            <div class="rating">
+                                <span class="star" data-value="1">&#9733;</span>
+                                <span class="star" data-value="2">&#9733;</span>
+                                <span class="star" data-value="3">&#9733;</span>
+                                <span class="star" data-value="4">&#9733;</span>
+                                <span class="star" data-value="5">&#9733;</span>
+                                <span class="rating-value">0/5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Van Category -->
+                <div class="col-md-4 mb-4 car-card" data-category="van" data-brand="Mercedes">
+                    <div class="card h-100">
+                        <img src="img/v250.png" class="card-img-top" alt="Van">
+                        <div class="card-body">
+                            <h5 class="card-title">Mersedes V250</h5>
+                            <p class="card-text">Price: $2500/day</p>
+                            <a href="#" class="btn btn-dark">Rent Now</a>
+
+                            <!-- Кнопка "Подробнее" -->
+                            <button class="btn btn-outline-secondary mt-2 details-btn">Подробнее</button>
+
+                            <!-- Скрытый дополнительный контент -->
+                            <div class="extra-content" style="display: none;">
+                                <p>Mercedes V250 — просторный и комфортный минивэн, идеально подходящий для семейных путешествий. Совмещает удобство и технологичность с большим количеством пространства для багажа и пассажиров.</p>
+                            </div>
+
+                            <!-- Рейтинг -->
+                            <div class="rating">
+                                <span class="star" data-value="1">&#9733;</span>
+                                <span class="star" data-value="2">&#9733;</span>
+                                <span class="star" data-value="3">&#9733;</span>
+                                <span class="star" data-value="4">&#9733;</span>
+                                <span class="star" data-value="5">&#9733;</span>
+                                <span class="rating-value">0/5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
     </section>
+</main>
 
-    <footer>
-        <p>&copy; 2024 Car Booking</p>
-    </footer>
-
-    <script src="script.js"></script>
+<script src="script.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
 </body>
-
 </html>
+

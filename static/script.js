@@ -147,3 +147,127 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
     });
 });
 
+
+document.addEventListener("DOMContentLoaded", () => {
+    const hotels = [
+        { name: "Hotel California", price: 200, rating: 4.5 },
+        { name: "Grand Budapest", price: 150, rating: 4.8 },
+        { name: "The Plaza", price: 300, rating: 4.7 },
+        { name: "Ritz Carlton", price: 350, rating: 4.9 },
+    ];
+
+    const hotelList = document.getElementById("hotelList");
+    const filterInput = document.getElementById("filterHotels");
+    const sortSelect = document.getElementById("sortHotels");
+    const applyButton = document.getElementById("applyFilterSort");
+
+    function renderHotels(filteredHotels) {
+        hotelList.innerHTML = ""; // Clear the list
+        filteredHotels.forEach((hotel) => {
+            const hotelDiv = document.createElement("div");
+            hotelDiv.classList.add("car");
+            hotelDiv.innerHTML = `
+                <h3>${hotel.name}</h3>
+                <p>Price: $${hotel.price}</p>
+                <p>Rating: ${hotel.rating}</p>
+            `;
+            hotelList.appendChild(hotelDiv);
+        });
+    }
+
+    function applyFilterAndSort() {
+        let filteredHotels = hotels;
+
+        // Apply filter
+        const filterText = filterInput.value.toLowerCase();
+        if (filterText) {
+            filteredHotels = filteredHotels.filter((hotel) =>
+                hotel.name.toLowerCase().includes(filterText)
+            );
+        }
+
+        // Apply sort
+        const sortValue = sortSelect.value;
+        if (sortValue === "price") {
+            filteredHotels.sort((a, b) => a.price - b.price);
+        } else if (sortValue === "rating") {
+            filteredHotels.sort((a, b) => b.rating - a.rating);
+        } else if (sortValue === "name") {
+            filteredHotels.sort((a, b) => a.name.localeCompare(b.name));
+        }
+
+        renderHotels(filteredHotels);
+    }
+
+    applyButton.addEventListener("click", applyFilterAndSort);
+
+    // Initial render
+    renderHotels(hotels);
+});
+
+// Filter cars based on category
+document.getElementById('categoryFilter').addEventListener('change', function() {
+    const category = this.value;
+    const cars = document.querySelectorAll('.car-card');
+    cars.forEach(car => {
+        car.style.display = (category === 'all' || car.getAttribute('data-category') === category) ? 'block' : 'none';
+    });
+});
+
+// Обработка кликов по звездам для рейтинга
+document.querySelectorAll('.rating').forEach(rating => {
+    const stars = rating.querySelectorAll('.star');
+    const ratingValueDisplay = rating.querySelector('.rating-value');
+
+    stars.forEach(star => {
+        star.addEventListener('click', function () {
+            const selectedValue = this.getAttribute('data-value');
+
+            // Снимаем выделение со всех звезд
+            stars.forEach(star => star.classList.remove('selected'));
+
+            // Выделяем звезды до выбранной включительно
+            for (let i = 0; i < selectedValue; i++) {
+                stars[i].classList.add('selected');
+            }
+
+            // Обновляем числовое значение рейтинга
+            ratingValueDisplay.textContent = `${selectedValue}/5`;
+        });
+    });
+});
+// Переключение видимости дополнительного контента
+document.querySelectorAll('.details-btn').forEach(button => {
+    button.addEventListener('click', () => {
+        const extraContent = button.nextElementSibling;
+        if (extraContent.style.display === 'none' || extraContent.style.display === '') {
+            extraContent.style.display = 'block';
+            button.textContent = 'Скрыть';
+        } else {
+            extraContent.style.display = 'none';
+            button.textContent = 'Подробнее';
+        }
+    });
+});
+// Функция фильтрации по категории и бренду
+function filterCars() {
+    const selectedCategory = document.getElementById('categoryFilter').value;
+    const selectedBrand = document.getElementById('brandFilter').value;
+
+    document.querySelectorAll('.car-card').forEach(car => {
+        const carCategory = car.getAttribute('data-category');
+        const carBrand = car.getAttribute('data-brand');
+
+        // Проверка условий фильтрации
+        const categoryMatch = (selectedCategory === 'all' || carCategory === selectedCategory);
+        const brandMatch = (selectedBrand === 'all' || carBrand === selectedBrand);
+
+        // Показываем или скрываем карточки, если совпадают оба условия
+        car.style.display = (categoryMatch && brandMatch) ? 'block' : 'none';
+    });
+}
+
+// Привязка функции фильтрации к изменениям в выпадающих списках
+document.getElementById('categoryFilter').addEventListener('change', filterCars);
+document.getElementById('brandFilter').addEventListener('change', filterCars);
+
