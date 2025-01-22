@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"net/smtp"
+	"os"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -72,11 +73,17 @@ func main() {
 	http.HandleFunc("/clear-messages", handleClearMessages)
 	http.HandleFunc("/confirm", handleConfirm)
 
+	// Получаем порт из переменной окружения (Render использует PORT)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080" // Порт по умолчанию, если переменная окружения не задана
+	}
+
 	// Запуск сервера
-	fmt.Println("Сервер запущен на http://localhost:8080")
-	err = http.ListenAndServe(":8080", nil)
+	fmt.Printf("Сервер запущен на http://localhost:%s\n", port)
+	err = http.ListenAndServe(":"+port, nil)
 	if err != nil {
-		fmt.Println("Ошибка запуска сервера:", err)
+		log.Fatalf("Ошибка запуска сервера: %v", err)
 	}
 }
 
