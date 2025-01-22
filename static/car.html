@@ -9,23 +9,76 @@
 </head>
 
 <body>
+    <!-- Header -->
     <header>
-        <h1>Book a Car</h1>
+        <nav>
+            <ul>
+                <li><a href="hotel.html">Book a Hotel</a></li>
+                <li><a href="car.html">Book a Car</a></li>
+                <li><a href="profile.html">Profile</a></li>
+                <li><a href="login.html" class="account-link"><i class="fa fa-user"></i> Account</a></li>
+            </ul>
+        </nav>
     </header>
 
-    <section class="car-section">
-        <h2>Available Cars</h2>
-        <label for="sortCars">Sort by:</label>
-        <select id="sortCars">
-            <option value="price">Price</option>
-            <option value="rating">Rating</option>
-            <option value="model">Model</option>
-        </select>
-        <div id="carList"></div>
-    </section>
+    <!-- Main Content -->
+    <main class="container my-5">
+        <h1 class="text-center">Available Cars</h1>
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <select class="form-select" id="carCategory">
+                        <option selected>All Categories</option>
+                        <option value="Sedan">Sedan</option>
+                        <option value="SUV">SUV</option>
+                        <option value="Electric">Electric</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <select class="form-select" id="carBrand">
+                        <option selected>All Brands</option>
+                        <option value="Toyota">Toyota</option>
+                        <option value="Ford">Ford</option>
+                        <option value="Tesla">Tesla</option>
+                        <option value="Porsche">Porsche</option>
+                        <option value="Ferrari">Ferrari</option>
+                        <option value="BMW">BMW</option>
+                        <option value="Mercedes">Mercedes</option>
+                        <option value="GMC">GMC</option>
+                        <option value="Cadillac">Cadillac</option>
+                        <option value="Rolls Royce">Rolls Royce</option>
+                        <option value="Nissan">Nissan</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <select class="form-select" id="carSort">
+                        <option selected>Sort By</option>
+                        <option value="rating">Rating</option>
+                        <option value="price">Price</option>
+                    </select>
+                </div>
+            </div>
+        </div>
 
-    <footer>
-        <p>&copy; 2024 Car Booking</p>
+        <div id="carList" class="row">
+            <!-- Dynamic car content will be inserted here -->
+        </div>
+
+        <!-- Pagination Controls -->
+        <div id="paginationControls" class="pagination-container text-center mt-4">
+            <button class="page-button" id="firstPage">« First</button>
+            <button class="page-button" id="prevPage">‹ Prev</button>
+            <div class="pagination-buttons">
+                <!-- Page numbers will be inserted here -->
+            </div>
+            <button class="page-button" id="nextPage">Next ›</button>
+            <button class="page-button" id="lastPage">Last »</button>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-4 bg-light">
+        <p>&copy; 2024 Booking Platform</p>
     </footer>
 
     <script src="script.js"></script>

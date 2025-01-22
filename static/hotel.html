@@ -9,19 +9,38 @@
 </head>
 
 <body>
+    <!-- Header -->
     <header>
-        <h1>Book a Hotel</h1>
+        <nav>
+            <ul>
+                <li><a href="hotel.html">Book a Hotel</a></li>
+                <li><a href="car.html">Book a Car</a></li>
+                <li><a href="profile.html">Profile</a></li>
+                <li><a href="login.html" class="account-link"><i class="fa fa-user"></i> Account</a></li>
+            </ul>
+        </nav>
     </header>
 
     <section class="hotel-section">
         <h2>Available Hotels</h2>
-        <label for="sortHotels">Sort by:</label>
-        <select id="sortHotels">
-            <option value="price">Price</option>
-            <option value="rating">Rating</option>
-            <option value="name">Name</option>
-        </select>
-        <div id="hotelList"></div>
+
+        <div class="filter-sort-container">
+            <label for="filterHotels">Filter by name:</label>
+            <input type="text" id="filterHotels" placeholder="Enter hotel name">
+
+            <label for="sortHotels">Sort by:</label>
+            <select id="sortHotels">
+                <option value="price">Price</option>
+                <option value="rating">Rating</option>
+                <option value="name">Name</option>
+            </select>
+
+            <button id="applyFilterSort">Apply</button>
+        </div>
+
+        <div id="hotelList">
+            <!-- Hotel items will be dynamically added here -->
+        </div>
     </section>
 
     <footer>
