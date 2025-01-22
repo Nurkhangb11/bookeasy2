@@ -76,12 +76,12 @@ func main() {
 	// Получаем порт из переменной окружения (Render использует PORT)
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "4000" // Порт по умолчанию, если переменная окружения не задана
+		port = "8080" // Порт по умолчанию, если переменная окружения не задана
 	}
 
-	// Запуск сервера
-	fmt.Printf("Сервер запущен на http://localhost:%s\n", port)
-	err = http.ListenAndServe(":"+port, nil)
+	// Запуск сервера на 0.0.0.0 и полученном порту
+	fmt.Printf("Сервер запущен на http://0.0.0.0:%s\n", port)
+	err = http.ListenAndServe("0.0.0.0:"+port, nil) // Слушаем на всех интерфейсах
 	if err != nil {
 		log.Fatalf("Ошибка запуска сервера: %v", err)
 	}
