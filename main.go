@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"net/smtp"
+	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -69,6 +70,7 @@ func main() {
 	http.HandleFunc("/send-chat-message", handleSendMessage)
 	http.HandleFunc("/messages", handleSelectMessages)
 	http.HandleFunc("/clear-messages", handleClearMessages)
+	http.HandleFunc("/confirm", handleConfirm)
 
 	// Запуск сервера
 	fmt.Println("Сервер запущен на http://localhost:8080")
@@ -96,17 +98,86 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Сохраняем пользователя в базе данных без хеширования пароля
-		_, err = db.Exec(`INSERT INTO users (first_name, last_name, email, password) VALUES ($1, $2, $3, $4)`, user.FirstName, user.LastName, user.Email, user.Password)
+		// Генерация токена
+		token := generateToken()
+
+		// Сохранение пользователя с токеном
+		_, err = db.Exec(`INSERT INTO users (first_name, last_name, email, password, confirmation_token) VALUES ($1, $2, $3, $4, $5)`,
+			user.FirstName, user.LastName, user.Email, user.Password, token)
 		if err != nil {
 			log.Printf("Ошибка SQL: %v", err)
 			http.Error(w, `{"status":"error","message":"Ошибка сохранения данных в базе"}`, http.StatusInternalServerError)
 			return
 		}
 
+		// Отправка email
+		err = sendConfirmationEmail(user.Email, token)
+		if err != nil {
+			log.Printf("Ошибка отправки email: %v", err)
+			http.Error(w, `{"status":"error","message":"Ошибка отправки email"}`, http.StatusInternalServerError)
+			return
+		}
+
 		response := map[string]string{
 			"status":  "success",
-			"message": "Пользователь успешно зарегистрирован",
+			"message": "Пользователь успешно зарегистрирован. Проверьте email для подтверждения.",
+		}
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
+}
+
+func generateToken() string {
+	return fmt.Sprintf("%x", time.Now().UnixNano()) // Уникальный токен
+}
+
+func sendConfirmationEmail(email, token string) error {
+	smtpHost := "smtp.mail.ru"
+	smtpPort := "587"
+	from := "bookeasy_help@mail.ru"
+	password := "L1sFSSHs1qax2Cy3ssxN"
+	to := []string{email}
+
+	subject := "Подтверждение регистрации"
+	body := fmt.Sprintf("Здравствуйте!\n\nПерейдите по ссылке для подтверждения регистрации:\nhttp://localhost:8080/confirm?token=%s", token)
+
+	auth := smtp.PlainAuth("", from, password, smtpHost)
+	msg := []byte("To: " + email + "\r\n" +
+		"Subject: " + subject + "\r\n" +
+		"\r\n" + body + "\r\n")
+
+	return smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, msg)
+}
+
+func handleConfirm(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if r.Method == http.MethodGet {
+		token := r.URL.Query().Get("token")
+		if token == "" {
+			http.Error(w, `{"status":"fail","message":"Токен не указан"}`, http.StatusBadRequest)
+			return
+		}
+
+		// Проверка токена и активация пользователя
+		result, err := db.Exec(`UPDATE users SET is_confirmed = TRUE, confirmation_token = NULL WHERE confirmation_token = $1`, token)
+		if err != nil {
+			log.Printf("Ошибка SQL: %v", err)
+			http.Error(w, `{"status":"error","message":"Ошибка базы данных"}`, http.StatusInternalServerError)
+			return
+		}
+
+		rowsAffected, _ := result.RowsAffected()
+		if rowsAffected == 0 {
+			http.Error(w, `{"status":"fail","message":"Некорректный токен"}`, http.StatusBadRequest)
+			return
+		}
+
+		response := map[string]string{
+			"status":  "success",
+			"message": "Регистрация подтверждена. Теперь вы можете войти.",
 		}
 		json.NewEncoder(w).Encode(response)
 		return
@@ -144,6 +215,18 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		// Сравнение пароля с сохраненным паролем
 		if storedPassword != user.Password {
 			http.Error(w, `{"status":"fail","message":"Неверный пароль"}`, http.StatusUnauthorized)
+			return
+		}
+
+		var isConfirmed bool
+		err = db.QueryRow(`SELECT password, is_confirmed FROM users WHERE email = $1`, user.Email).Scan(&storedPassword, &isConfirmed)
+		if err != nil {
+			http.Error(w, `{"status":"fail","message":"Пользователь не найден"}`, http.StatusUnauthorized)
+			return
+		}
+
+		if !isConfirmed {
+			http.Error(w, `{"status":"fail","message":"Подтвердите email перед входом"}`, http.StatusForbidden)
 			return
 		}
 

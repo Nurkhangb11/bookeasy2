@@ -9,6 +9,18 @@
 </head>
 
 <body>
+
+    <header>
+        <nav>
+            <ul>
+                <li><a href="hotel.html">Book a Hotel</a></li>
+                <li><a href="car.html">Book a Car</a></li>
+                <li><a href="profile.html">Profile</a></li>
+                <li><a href="login.html" class="account-link"><i class="fa fa-user"></i> Account</a></li>
+            </ul>
+        </nav>
+    </header>
+
     <section class="profile-section">
         <h2>Your Profile</h2>
         <div id="profile">
@@ -68,6 +80,54 @@
             }
         }
 
+        // Обработчик формы для отправки сообщения
+document.getElementById("supportForm").addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    const message = document.getElementById("message").value;
+    const attachment = document.getElementById("attachment").files[0];
+
+    const formData = new FormData();
+    formData.append("email", email); // Передаем email из localStorage
+    formData.append("message", message);
+    if (attachment) {
+        formData.append("attachment", attachment);
+    }
+
+    try {
+        const response = await fetch("http://localhost:8080/send-support-message", {
+            method: "POST",
+            body: formData,
+        });
+
+        // Проверяем статус ответа
+        if (response.ok) {
+            const data = await response.json();
+            if (data.status === "success") {
+                alert("Message sent successfully!");
+            } else {
+                alert(data.message || "Failed to send message.");
+            }
+        } else {
+            const errorText = await response.text();
+            alert(`Server error: ${errorText}`);
+        }
+    } catch (error) {
+        console.error("Error sending message:", error);
+        alert("An unexpected error occurred. Please try again later.");
+    }
+});
+
+// Загружаем профиль при загрузке страницы
+window.onload = fetchProfile;
+
+// Логика для выхода из аккаунта
+document.getElementById('logoutButton').addEventListener('click', function () {
+    localStorage.removeItem('email'); // Удаляем email из хранилища
+    window.location.href = "login.html"; // Перенаправляем на страницу логина
+});
+
+
         // Обработчик формы для отправки сообщения через Helpdesk
         document.getElementById("supportForm").addEventListener("submit", async function (event) {
             event.preventDefault();
@@ -80,7 +140,7 @@
             }
 
             try {
-                const response = await fetch("http://localhost:8080/send-support-message", {
+                const response = await fetch("http://localhost:8080/send-chat-message", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
