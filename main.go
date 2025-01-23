@@ -89,7 +89,7 @@ func main() {
 
 // Функция подключения к PostgreSQL
 func connectToDatabase() (*sql.DB, error) {
-	connStr := "host=localhost port=5432 user=postgres password=password dbname=hotel_booking sslmode=disable"
+	connStr := "host=0.0.0.0 port=10000 user=postgres password=password dbname=hotel_booking sslmode=disable"
 	return sql.Open("postgres", connStr)
 }
 
