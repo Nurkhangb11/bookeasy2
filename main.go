@@ -89,8 +89,25 @@ func main() {
 
 // Функция подключения к PostgreSQL
 func connectToDatabase() (*sql.DB, error) {
-	connStr := "host=0.0.0.0 port=10000 user=postgres password=password dbname=hotel_booking sslmode=disable"
-	return sql.Open("postgres", connStr)
+	// Получаем строку подключения из переменной окружения
+	connStr := os.Getenv("DATABASE_URL")
+	if connStr == "" {
+		return nil, fmt.Errorf("DATABASE_URL is not set")
+	}
+
+	// Подключаемся к базе данных
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open database: %v", err)
+	}
+
+	// Проверяем, что подключение установлено
+	if err := db.Ping(); err != nil {
+		return nil, fmt.Errorf("failed to connect to database: %v", err)
+	}
+
+	fmt.Println("Connected to the database successfully!")
+	return db, nil
 }
 
 func handleRegister(w http.ResponseWriter, r *http.Request) {
