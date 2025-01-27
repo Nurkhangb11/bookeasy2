@@ -7,9 +7,9 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"net/smtp"
-	"os"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -73,41 +73,18 @@ func main() {
 	http.HandleFunc("/clear-messages", handleClearMessages)
 	http.HandleFunc("/confirm", handleConfirm)
 
-	// Получаем порт из переменной окружения (Render использует PORT)
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "10000" // Порт по умолчанию, если переменная окружения не задана
-	}
-
-	// Запуск сервера на 0.0.0.0 и полученном порту
-	fmt.Printf("Сервер запущен на http://0.0.0.0:%s\n", port)
-	err = http.ListenAndServe("0.0.0.0:"+port, nil) // Слушаем на всех интерфейсах
+	// Запуск сервера
+	fmt.Println("Сервер запущен на http://localhost:8080")
+	err = http.ListenAndServe(":8080", nil)
 	if err != nil {
-		log.Fatalf("Ошибка запуска сервера: %v", err)
+		fmt.Println("Ошибка запуска сервера:", err)
 	}
 }
 
 // Функция подключения к PostgreSQL
 func connectToDatabase() (*sql.DB, error) {
-	// Получаем строку подключения из переменной окружения
-	connStr := os.Getenv("DATABASE_URL")
-	if connStr == "" {
-		return nil, fmt.Errorf("DATABASE_URL is not set")
-	}
-
-	// Подключаемся к базе данных
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open database: %v", err)
-	}
-
-	// Проверяем, что подключение установлено
-	if err := db.Ping(); err != nil {
-		return nil, fmt.Errorf("failed to connect to database: %v", err)
-	}
-
-	fmt.Println("Connected to the database successfully!")
-	return db, nil
+	connStr := "host=localhost port=5432 user=postgres password=password dbname=hotel_booking sslmode=disable"
+	return sql.Open("postgres", connStr)
 }
 
 func handleRegister(w http.ResponseWriter, r *http.Request) {
@@ -218,17 +195,23 @@ type LoginData struct {
 
 func handleLogin(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+
+	if r.Method == http.MethodOptions {
+		return
+	}
 
 	if r.Method == http.MethodPost {
 		var user User
 		err := json.NewDecoder(r.Body).Decode(&user)
-
 		if err != nil || user.Email == "" || user.Password == "" {
 			http.Error(w, `{"status":"fail","message":"Некорректные данные формы"}`, http.StatusBadRequest)
 			return
 		}
 
-		// Проверка пользователя в базе данных без хеширования пароля
 		var storedPassword string
 		err = db.QueryRow(`SELECT password FROM users WHERE email = $1`, user.Email).Scan(&storedPassword)
 		if err != nil {
@@ -236,25 +219,18 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Сравнение пароля с сохраненным паролем
 		if storedPassword != user.Password {
 			http.Error(w, `{"status":"fail","message":"Неверный пароль"}`, http.StatusUnauthorized)
 			return
 		}
 
 		var isConfirmed bool
-		err = db.QueryRow(`SELECT password, is_confirmed FROM users WHERE email = $1`, user.Email).Scan(&storedPassword, &isConfirmed)
-		if err != nil {
-			http.Error(w, `{"status":"fail","message":"Пользователь не найден"}`, http.StatusUnauthorized)
-			return
-		}
-
-		if !isConfirmed {
+		err = db.QueryRow(`SELECT is_confirmed FROM users WHERE email = $1`, user.Email).Scan(&isConfirmed)
+		if err != nil || !isConfirmed {
 			http.Error(w, `{"status":"fail","message":"Подтвердите email перед входом"}`, http.StatusForbidden)
 			return
 		}
 
-		// Успешный логин
 		response := map[string]string{
 			"status":  "success",
 			"message": "Вы успешно вошли",
@@ -269,11 +245,16 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 // Функция для получения данных пользователя
 func handleProfile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
-	// Проверяем, что метод GET
+	if r.Method == http.MethodOptions {
+		return
+	}
+
 	if r.Method == http.MethodGet {
-		// Получаем email из заголовка запроса или из сессии (зависит от реализации аутентификации)
-		// Для простоты примем, что email передается в заголовке запроса
+		// Получаем email из параметров URL
 		email := r.URL.Query().Get("email")
 		if email == "" {
 			http.Error(w, `{"status":"fail","message":"Email не указан"}`, http.StatusBadRequest)
@@ -284,6 +265,7 @@ func handleProfile(w http.ResponseWriter, r *http.Request) {
 		var user User
 		err := db.QueryRow(`SELECT first_name, last_name, email FROM users WHERE email = $1`, email).Scan(&user.FirstName, &user.LastName, &user.Email)
 		if err != nil {
+			log.Println("Ошибка при запросе к БД:", err)
 			http.Error(w, `{"status":"fail","message":"Пользователь не найден"}`, http.StatusNotFound)
 			return
 		}
@@ -298,33 +280,52 @@ func handleProfile(w http.ResponseWriter, r *http.Request) {
 
 // Обработчик для отправки сообщений
 func handleSendSupportMessage(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		r.ParseMultipartForm(10 << 20) // Устанавливаем лимит на размер формы (10 MB)
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*") // Разрешаем CORS
+	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
-		// Получаем данные из формы
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	if r.Method == http.MethodPost {
+		// Ограничиваем размер запроса
+		r.ParseMultipartForm(10 << 20)
+
+		// Получаем данные формы
 		email := r.FormValue("email")
 		message := r.FormValue("message")
-		attachment, _, err := r.FormFile("attachment")
 
-		if err != nil && attachment != nil {
-			http.Error(w, "Failed to read attachment", http.StatusInternalServerError)
-			return
-		}
+		var attachment multipart.File
+		var err error
 
-		// Если файл прикреплен, сохраняем его
-		if attachment != nil {
+		if r.MultipartForm != nil && r.MultipartForm.File["attachment"] != nil {
+			attachment, _, err = r.FormFile("attachment")
+			if err != nil {
+				log.Println("Ошибка чтения вложения:", err)
+				http.Error(w, `{"status":"fail","message":"Failed to read attachment"}`, http.StatusBadRequest)
+				return
+			}
+			defer attachment.Close()
+
+			// Сохраняем файл на диск
 			file, err := ioutil.TempFile("./uploads", "attachment-*.jpg")
 			if err != nil {
-				http.Error(w, "Failed to save file", http.StatusInternalServerError)
+				log.Println("Ошибка сохранения файла:", err)
+				http.Error(w, `{"status":"fail","message":"Failed to save file"}`, http.StatusInternalServerError)
 				return
 			}
 			defer file.Close()
 
 			_, err = io.Copy(file, attachment)
 			if err != nil {
-				http.Error(w, "Failed to copy attachment", http.StatusInternalServerError)
+				log.Println("Ошибка копирования файла:", err)
+				http.Error(w, `{"status":"fail","message":"Failed to copy attachment"}`, http.StatusInternalServerError)
 				return
 			}
+			log.Println("Файл сохранён:", file.Name())
 		}
 
 		// Создаем письмо
@@ -338,35 +339,42 @@ func handleSendSupportMessage(w http.ResponseWriter, r *http.Request) {
 		password := "L1sFSSHs1qax2Cy3ssxN"
 		to := []string{"erme.shoinov@bk.ru"}
 
-		auth := smtp.PlainAuth("erme.shoinov@bk.ru", from, password, smtpHost)
-		msg := []byte("To: \r\n" +
+		auth := smtp.PlainAuth("", from, password, smtpHost)
+		msg := []byte("To: erme.shoinov@bk.ru\r\n" +
 			"Subject: " + subject + "\r\n" +
 			"\r\n" + body + "\r\n")
 
 		// Отправка письма
 		err = smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, msg)
 		if err != nil {
-			http.Error(w, "Failed to send email", http.StatusInternalServerError)
+			log.Println("Ошибка отправки письма:", err)
+			http.Error(w, `{"status":"fail","message":"Failed to send email"}`, http.StatusInternalServerError)
 			return
 		}
 
-		// Ответ на запрос
-		w.Header().Set("Content-Type", "application/json")
+		// Успешный ответ
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, `{"status": "success", "message": "Message sent successfully"}`)
 		return
 	}
 
-	http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+	http.Error(w, `{"status":"fail","message":"Invalid request method"}`, http.StatusMethodNotAllowed)
 }
 
-// Обработчик для добавления сообщения через хэлпдеск
 func handleSendMessage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
 
 	if r.Method == http.MethodPost {
 		var requestData struct {
-			Message string `json:"message"` // Используем "message", чтобы соответствовать клиентскому запросу
+			Message string `json:"message"`
 		}
 
 		// Декодируем данные из запроса
@@ -377,7 +385,7 @@ func handleSendMessage(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Сохраняем сообщение в таблицу `messages`
+		// Сохраняем сообщение в базу данных
 		_, err = db.Exec("INSERT INTO messages (content) VALUES ($1)", requestData.Message)
 		if err != nil {
 			log.Println("Ошибка сохранения данных в базу данных:", err)
@@ -405,9 +413,16 @@ func handleSendMessage(w http.ResponseWriter, r *http.Request) {
 // Обработчик для SELECT (все сообщения)
 func handleSelectMessages(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
 
 	if r.Method == http.MethodGet {
-		// Изменяем запрос, чтобы использовать таблицу `messages`
 		rows, err := db.Query("SELECT id, content FROM messages")
 		if err != nil {
 			log.Println("Ошибка запроса к базе данных:", err)
@@ -440,8 +455,11 @@ func handleSelectMessages(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Отправляем данные в формате JSON
-		json.NewEncoder(w).Encode(messages)
+		// Успешный ответ
+		if err := json.NewEncoder(w).Encode(messages); err != nil {
+			log.Println("Ошибка кодирования JSON:", err)
+			http.Error(w, `{"status":"error","message":"Ошибка формирования ответа"}`, http.StatusInternalServerError)
+		}
 		return
 	}
 
@@ -451,10 +469,19 @@ func handleSelectMessages(w http.ResponseWriter, r *http.Request) {
 // Обработчик для очистки всех сообщений
 func handleClearMessages(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
 
 	if r.Method == http.MethodPost {
 		_, err := db.Exec("DELETE FROM support_messages")
 		if err != nil {
+			log.Println("Ошибка при очистке сообщений:", err)
 			http.Error(w, `{"status":"error","message":"Ошибка очистки данных"}`, http.StatusInternalServerError)
 			return
 		}
@@ -463,9 +490,13 @@ func handleClearMessages(w http.ResponseWriter, r *http.Request) {
 			"status":  "success",
 			"message": "Сообщения успешно очищены",
 		}
-		json.NewEncoder(w).Encode(response)
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			log.Println("Ошибка формирования JSON-ответа:", err)
+			http.Error(w, `{"status":"error","message":"Ошибка формирования ответа"}`, http.StatusInternalServerError)
+		}
 		return
 	}
 
+	log.Println("Метод не поддерживается:", r.Method)
 	http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
 }
