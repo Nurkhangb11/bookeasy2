@@ -12,25 +12,21 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// connectToDatabase — подключение к PostgreSQL
 func connectToDatabase() (*sql.DB, error) {
 	connStr := "host=localhost port=5432 user=postgres password=123olx123 dbname=hotel_booking sslmode=disable"
 	return sql.Open("postgres", connStr)
 }
 
-// hashPassword — функция хеширования пароля
 func hashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(bytes), err
 }
 
-// checkPasswordHash — проверка пароля
 func checkPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }
 
-// handleRegister — обработчик регистрации пользователя
 func handleRegister(w http.ResponseWriter, r *http.Request) {
 	db, err := connectToDatabase()
 	if err != nil {
@@ -68,7 +64,6 @@ func handleRegister(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(`{"status":"success","message":"Пользователь успешно зарегистрирован"}`))
 }
 
-// handleLogin — обработчик авторизации пользователя
 func handleLogin(w http.ResponseWriter, r *http.Request) {
 	db, err := connectToDatabase()
 	if err != nil {
@@ -103,7 +98,7 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(`{"status":"success","message":"Успешный вход в систему"}`))
 }
 
-// Тесты
+
 
 func TestConnectToDatabase(t *testing.T) {
 	db, err := connectToDatabase()
@@ -127,17 +122,15 @@ func TestHandleRegister(t *testing.T) {
 	}
 	defer db.Close()
 
-	// Создаём тестовый HTTP-запрос
+
 	payload := `{"first_name":"John","last_name":"Doe","email":"test@example.com","password":"123456"}`
 	req := httptest.NewRequest(http.MethodPost, "/register", strings.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
 
-	// Создаём тестовый HTTP-ответ
 	w := httptest.NewRecorder()
 
 	handleRegister(w, req)
 
-	// Проверяем результат
 	res := w.Result()
 	defer res.Body.Close()
 
@@ -165,7 +158,6 @@ func TestHandleLogin(t *testing.T) {
 	}
 	defer db.Close()
 
-	// Создаём тестового пользователя в базе данных
 	hashedPassword, _ := hashPassword("123456")
 	_, err = db.Exec(`INSERT INTO users (first_name, last_name, email, password, is_confirmed) VALUES ($1, $2, $3, $4, $5)`,
 		"John", "Doe", "test@example.com", hashedPassword, true)
@@ -173,7 +165,6 @@ func TestHandleLogin(t *testing.T) {
 		t.Fatalf("Не удалось создать тестового пользователя: %v", err)
 	}
 
-	// Создаём запрос на логин
 	payload := `{"email":"test@example.com","password":"123456"}`
 	req := httptest.NewRequest(http.MethodPost, "/login", strings.NewReader(payload))
 	req.Header.Set("Content-Type", "application/json")
@@ -208,10 +199,8 @@ func TestIntegration_RegisterAndLogin(t *testing.T) {
 	}
 	defer db.Close()
 
-	// Убедимся, что тестовый пользователь отсутствует
 	_, _ = db.Exec(`DELETE FROM users WHERE email = $1`, "integration@example.com")
 
-	// Регистрация пользователя
 	registerPayload := `{"first_name":"Alice","last_name":"Smith","email":"integration@example.com","password":"securepassword"}`
 	registerReq := httptest.NewRequest(http.MethodPost, "/register", strings.NewReader(registerPayload))
 	registerReq.Header.Set("Content-Type", "application/json")
@@ -223,7 +212,6 @@ func TestIntegration_RegisterAndLogin(t *testing.T) {
 		t.Fatalf("Регистрация провалилась с кодом: %v", registerResp.Result().StatusCode)
 	}
 
-	// Логин зарегистрированного пользователя
 	loginPayload := `{"email":"integration@example.com","password":"securepassword"}`
 	loginReq := httptest.NewRequest(http.MethodPost, "/login", strings.NewReader(loginPayload))
 	loginReq.Header.Set("Content-Type", "application/json")
@@ -238,7 +226,6 @@ func TestIntegration_RegisterAndLogin(t *testing.T) {
 	t.Log("Интеграционный тест регистрации и логина прошёл успешно")
 }
 func TestE2E_RegisterAndLogin(t *testing.T) {
-	// Запуск HTTP-сервера
 	mux := http.NewServeMux()
 	mux.HandleFunc("/register", handleRegister)
 	mux.HandleFunc("/login", handleLogin)
@@ -246,7 +233,6 @@ func TestE2E_RegisterAndLogin(t *testing.T) {
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
-	// Регистрация пользователя через реальный HTTP-сервер
 	registerPayload := `{"first_name":"E2E","last_name":"User","email":"e2e@example.com","password":"e2epassword"}`
 	registerResp, err := http.Post(server.URL+"/register", "application/json", strings.NewReader(registerPayload))
 	if err != nil {
@@ -258,7 +244,6 @@ func TestE2E_RegisterAndLogin(t *testing.T) {
 		t.Fatalf("Ошибка регистрации, код: %v", registerResp.StatusCode)
 	}
 
-	// Авторизация пользователя через реальный HTTP-сервер
 	loginPayload := `{"email":"e2e@example.com","password":"e2epassword"}`
 	loginReq, err := http.NewRequest(http.MethodPost, server.URL+"/login", strings.NewReader(loginPayload))
 	if err != nil {
