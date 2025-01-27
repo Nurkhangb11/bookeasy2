@@ -4,14 +4,18 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/smtp"
 	"os"
+	"sort"
+	"strconv"
 	"time"
 
+	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 )
 
@@ -468,4 +472,137 @@ func handleClearMessages(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
+}
+
+type Car struct {
+	Model    string
+	Price    int
+	Rating   float64
+	Category string
+	Brand    string
+}
+
+var cars = []Car{
+	{"Toyota Corolla", 50, 4.5, "Sedan", "Toyota"},
+	{"Ford Explorer", 80, 4.0, "SUV", "Ford"},
+	{"Tesla Model 3", 120, 5.0, "Electric", "Tesla"},
+	{"Honda Civic", 40, 4.2, "Sedan", "Honda"},
+	{"BMW XM", 200, 5.0, "SUV", "BMW"},
+	{"Cadillac Escalade", 150, 4.8, "SUV", "Cadillac"},
+	{"Rolls Royce Cullinan", 5000, 5.0, "SUV", "Rolls Royce"},
+	{"Mercedes G63", 300, 4.9, "SUV", "Mercedes"},
+	{"Mercedes GLE53", 150, 4.5, "SUV", "Mercedes"},
+	{"GMC SLT", 100, 4.0, "SUV", "GMC"},
+	{"Porsche Macan", 300, 4.7, "SUV", "Porsche"},
+	{"Nissan Patrol", 100, 4.2, "SUV", "Nissan"},
+	{"BMW M4 Competition", 200, 4.8, "Sedan", "BMW"},
+	{"Audi RS3", 220, 4.6, "Sedan", "Audi"},
+	{"Audi RS5", 270, 4.7, "Sedan", "Audi"},
+	{"Audi S8", 300, 4.9, "Sedan", "Audi"},
+	{"BMW 730LI", 290, 4.6, "Sedan", "BMW"},
+	{"Mercedes EQE 350", 120, 4.5, "Electric", "Mercedes"},
+	{"Tesla Model 3", 120, 5.0, "Electric", "Tesla"},
+	{"Porsche 718", 4718, 4.9, "Sports", "Porsche"},
+	{"Porsche 911 Turbo S", 9000, 5.0, "Sports", "Porsche"},
+	{"Ferrari F8 Tributo", 9999, 5.0, "Sports", "Ferrari"},
+	{"Audi R8", 2000, 4.8, "Sports", "Audi"},
+	{"Audi RS6", 300, 4.7, "Sports", "Audi"},
+	{"Mercedes V250", 2500, 4.6, "Van", "Mercedes"},
+}
+
+const carsPerPage = 3
+
+// Функция для главной страницы
+func homeHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := template.ParseFiles("index.html")
+	if err != nil {
+		http.Error(w, "Ошибка загрузки шаблона", http.StatusInternalServerError)
+		log.Println("Ошибка загрузки шаблона:", err)
+		return
+	}
+	tmpl.Execute(w, nil)
+}
+
+// Функция для фильтрации, сортировки и пагинации автомобилей
+func carsHandler(w http.ResponseWriter, r *http.Request) {
+	category := r.URL.Query().Get("category")
+	brand := r.URL.Query().Get("brand")
+	sortBy := r.URL.Query().Get("sort")
+	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+	if page == 0 {
+		page = 1
+	}
+
+	// Фильтрация автомобилей
+	filteredCars := []Car{}
+	for _, car := range cars {
+		if (category == "" || car.Category == category) && (brand == "" || car.Brand == brand) {
+			filteredCars = append(filteredCars, car)
+		}
+	}
+
+	// Сортировка автомобилей
+	switch sortBy {
+	case "price":
+		sortCarsByPrice(filteredCars)
+	case "rating":
+		sortCarsByRating(filteredCars)
+	}
+
+	// Пагинация
+	startIndex := (page - 1) * carsPerPage
+	endIndex := startIndex + carsPerPage
+	if endIndex > len(filteredCars) {
+		endIndex = len(filteredCars)
+	}
+
+	// Передаем отфильтрованные и отсортированные данные
+	tmpl, err := template.ParseFiles("index.html")
+	if err != nil {
+		http.Error(w, "Ошибка загрузки шаблона", http.StatusInternalServerError)
+		log.Println("Ошибка загрузки шаблона:", err)
+		return
+	}
+	tmpl.Execute(w, struct {
+		Cars        []Car
+		TotalPages  int
+		CurrentPage int
+	}{
+		Cars:        filteredCars[startIndex:endIndex],
+		TotalPages:  (len(filteredCars) + carsPerPage - 1) / carsPerPage, // Общее количество страниц
+		CurrentPage: page,
+	})
+}
+
+// Функция сортировки автомобилей по цене
+func sortCarsByPrice(cars []Car) {
+	sort.SliceStable(cars, func(i, j int) bool {
+		return cars[i].Price < cars[j].Price
+	})
+}
+
+// Функция сортировки автомобилей по рейтингу
+func sortCarsByRating(cars []Car) {
+	sort.SliceStable(cars, func(i, j int) bool {
+		return cars[i].Rating > cars[j].Rating
+	})
+}
+
+// Функция для обработки статических файлов (CSS, изображения и т. д.)
+func staticHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "./static"+r.URL.Path)
+}
+
+// Функция для запуска сервера
+func startServer() {
+	r := mux.NewRouter() // создаем новый маршрутизатор
+
+	// Регистрация обработчиков маршрутов
+	r.HandleFunc("/", homeHandler).Methods("GET")
+	r.HandleFunc("/cars", carsHandler).Methods("GET")
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+
+	// Логирование запуска сервера
+	fmt.Println("Starting server on :8080...")
+	log.Fatal(http.ListenAndServe(":8080", r)) // запуск сервера с маршрутизатором
 }

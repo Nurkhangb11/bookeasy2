@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация Администратора</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        async function registerAdmin(event) {
+            event.preventDefault();
+
+            const firstName = document.getElementById("first_name").value;
+            const lastName = document.getElementById("last_name").value;
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            if (!firstName || !lastName || !email || !password) {
+                alert("Пожалуйста, заполните все поля.");
+                return;
+            }
+
+            try {
+                const response = await fetch("/admin/register", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        first_name: firstName,
+                        last_name: lastName,
+                        email: email,
+                        password: password,
+                        role: "admin", // Указываем роль
+                    }),
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert("Регистрация администратора успешна!");
+                    window.location.href = "admin-login.html";
+                } else {
+                    alert(result.message || "Ошибка регистрации.");
+                }
+            } catch (error) {
+                console.error("Ошибка:", error);
+                alert("Ошибка сервера. Попробуйте позже.");
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <section class="admin-register-section">
+        <h2>Регистрация Администратора</h2>
+        <form id="adminRegisterForm" onsubmit="registerAdmin(event)">
+            <label for="first_name">Имя:</label>
+            <input type="text" id="first_name" placeholder="Введите имя" required>
+
+            <label for="last_name">Фамилия:</label>
+            <input type="text" id="last_name" placeholder="Введите фамилию" required>
+
+            <label for="email">Email:</label>
+            <input type="email" id="email" placeholder="Введите email" required>
+
+            <label for="password">Пароль:</label>
+            <input type="password" id="password" placeholder="Введите пароль" required>
+
+            <button type="submit">Зарегистрироваться</button>
+        </form>
+    </section>
+</body>
+
+</html>
