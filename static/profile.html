@@ -30,7 +30,6 @@
     </section>
 
     <section>
-        <!-- Форма для отправки сообщения -->
         <h3>Contact Support</h3>
         <form id="supportForm" enctype="multipart/form-data">
             <label for="message">Message:</label>
@@ -46,7 +45,6 @@
     <section class="helpdesk">
         <h3>Helpdesk Chat</h3>
         <div id="chatWindow" style="border: 1px solid #ccc; padding: 10px; height: 200px; overflow-y: auto;">
-            <!-- Сообщения чата будут добавляться сюда -->
         </div>
         <textarea id="chatInput" placeholder="Type your message here..." style="width: 100%; margin-top: 10px;"></textarea>
         <button id="sendChatMessage" style="margin-top: 5px;">Send</button>
@@ -70,95 +68,19 @@
 
             if (response.ok) {
                 const user = await response.json();
+                const role = localStorage.getItem('role'); // Получаем роль из хранилища
+                const roleText = role === "admin" ? "<p><strong>Status:</strong> Admin</p>" : "";
+
                 document.getElementById('profile').innerHTML = `
                     <p><strong>First Name:</strong> ${user.first_name}</p>
                     <p><strong>Last Name:</strong> ${user.last_name}</p>
                     <p><strong>Email:</strong> ${user.email}</p>
+                    ${roleText}
                 `;
             } else {
                 document.getElementById('profile').innerHTML = '<p>Error loading profile. Please try again later.</p>';
             }
         }
-
-        // Обработчик формы для отправки сообщения
-document.getElementById("supportForm").addEventListener("submit", async function (event) {
-    event.preventDefault();
-
-    const message = document.getElementById("message").value;
-    const attachment = document.getElementById("attachment").files[0];
-
-    const formData = new FormData();
-    formData.append("email", email); // Передаем email из localStorage
-    formData.append("message", message);
-    if (attachment) {
-        formData.append("attachment", attachment);
-    }
-
-    try {
-        const response = await fetch("http://localhost:8080/send-support-message", {
-            method: "POST",
-            body: formData,
-        });
-
-        // Проверяем статус ответа
-        if (response.ok) {
-            const data = await response.json();
-            if (data.status === "success") {
-                alert("Message sent successfully!");
-            } else {
-                alert(data.message || "Failed to send message.");
-            }
-        } else {
-            const errorText = await response.text();
-            alert(`Server error: ${errorText}`);
-        }
-    } catch (error) {
-        console.error("Error sending message:", error);
-        alert("An unexpected error occurred. Please try again later.");
-    }
-});
-
-// Загружаем профиль при загрузке страницы
-window.onload = fetchProfile;
-
-// Логика для выхода из аккаунта
-document.getElementById('logoutButton').addEventListener('click', function () {
-    localStorage.removeItem('email'); // Удаляем email из хранилища
-    window.location.href = "login.html"; // Перенаправляем на страницу логина
-});
-
-
-        // Обработчик формы для отправки сообщения через Helpdesk
-        document.getElementById("supportForm").addEventListener("submit", async function (event) {
-            event.preventDefault();
-
-            const message = document.getElementById("message").value;
-
-            if (!message) {
-                alert("Please enter a message.");
-                return;
-            }
-
-            try {
-                const response = await fetch("http://localhost:8080/send-chat-message", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({ content: message })
-                });
-
-                const data = await response.json();
-                if (data.status === "success") {
-                    alert("Message sent successfully!");
-                } else {
-                    alert(data.message || "Failed to send message.");
-                }
-            } catch (error) {
-                console.error("Error sending message:", error);
-                alert("An unexpected error occurred. Please try again later.");
-            }
-        });
 
         // Загружаем профиль при загрузке страницы
         window.onload = fetchProfile;
@@ -166,7 +88,45 @@ document.getElementById('logoutButton').addEventListener('click', function () {
         // Логика для выхода из аккаунта
         document.getElementById('logoutButton').addEventListener('click', function () {
             localStorage.removeItem('email'); // Удаляем email из хранилища
+            localStorage.removeItem('role'); // Удаляем роль из хранилища
             window.location.href = "login.html"; // Перенаправляем на страницу логина
+        });
+
+        // Обработчик формы для отправки сообщения
+        document.getElementById("supportForm").addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const message = document.getElementById("message").value;
+            const attachment = document.getElementById("attachment").files[0];
+
+            const formData = new FormData();
+            formData.append("email", email); // Передаем email из localStorage
+            formData.append("message", message);
+            if (attachment) {
+                formData.append("attachment", attachment);
+            }
+
+            try {
+                const response = await fetch("http://localhost:8080/send-support-message", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status === "success") {
+                        alert("Message sent successfully!");
+                    } else {
+                        alert(data.message || "Failed to send message.");
+                    }
+                } else {
+                    const errorText = await response.text();
+                    alert(`Server error: ${errorText}`);
+                }
+            } catch (error) {
+                console.error("Error sending message:", error);
+                alert("An unexpected error occurred. Please try again later.");
+            }
         });
 
         // Логика для чата
@@ -201,42 +161,40 @@ document.getElementById('logoutButton').addEventListener('click', function () {
 
         // Отправить сообщение в чат
         sendChatMessage.addEventListener('click', async () => {
-    const message = chatInput.value.trim(); // Убираем лишние пробелы
-    if (message) {
-        // Блокируем кнопку отправки, чтобы избежать повторных нажатий
-        sendChatMessage.disabled = true;    
+            const message = chatInput.value.trim(); // Убираем лишние пробелы
+            if (message) {
+                sendChatMessage.disabled = true; // Блокируем кнопку отправки
 
-        try {
-            const response = await fetch("http://localhost:8080/send-chat-message", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ message }) // Отправляем объект с ключом "message"
-            });
+                try {
+                    const response = await fetch("http://localhost:8080/send-chat-message", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ message }) // Отправляем объект с ключом "message"
+                    });
 
-            if (!response.ok) {
-                throw new Error(`Server error: ${response.status}`);
+                    if (!response.ok) {
+                        throw new Error(`Server error: ${response.status}`);
+                    }
+
+                    // Добавляем сообщение в окно чата
+                    const messageElement = document.createElement('div');
+                    messageElement.textContent = message;
+                    messageElement.classList.add('chat-message');
+                    chatWindow.appendChild(messageElement);
+
+                    // Очищаем поле ввода и прокручиваем вниз
+                    chatInput.value = '';
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                } catch (error) {
+                    console.error("Error sending chat message:", error);
+                    alert("An error occurred while sending the message.");
+                } finally {
+                    sendChatMessage.disabled = false; // Разблокируем кнопку отправки
+                }
             }
-
-            // Добавляем сообщение в окно чата
-            const messageElement = document.createElement('div');
-            messageElement.textContent = message;
-            messageElement.classList.add('chat-message'); // Опционально: добавляем класс для стилизации
-            chatWindow.appendChild(messageElement);
-
-            // Очищаем поле ввода и прокручиваем вниз
-            chatInput.value = '';
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-        } catch (error) {
-            console.error("Error sending chat message:", error);
-            alert("An error occurred while sending the message.");
-        } finally {
-            // Разблокируем кнопку отправки
-            sendChatMessage.disabled = false;
-        }
-    }
-});
+        });
 
         // Очистить чат
         clearChat.addEventListener('click', async () => {
@@ -260,7 +218,7 @@ document.getElementById('logoutButton').addEventListener('click', function () {
             }
         });
 
-        // Load existing messages when the page is loaded
+        // Загружаем сообщения при загрузке страницы
         loadMessages();
     </script>
 </body>

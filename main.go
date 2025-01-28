@@ -633,7 +633,40 @@ func startServer() {
 	r.HandleFunc("/cars", carsHandler).Methods("GET")
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
+	r.Handle("/admin/cars", adminMiddleware(http.HandlerFunc(adminCarsHandler))).Methods("GET", "POST", "PUT", "DELETE")
+
 	// Логирование запуска сервера
 	fmt.Println("Starting server on :8080...")
 	log.Fatal(http.ListenAndServe(":8080", r)) // запуск сервера с маршрутизатором
+}
+
+func adminMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userRole := r.Header.Get("Role") // Или извлеките роль из сессии/токена
+		if userRole != "admin" {
+			http.Error(w, "Access Denied", http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func adminCarsHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "POST":
+		var newCar Car
+		err := json.NewDecoder(r.Body).Decode(&newCar)
+		if err != nil {
+			http.Error(w, "Invalid input", http.StatusBadRequest)
+			return
+		}
+		cars = append(cars, newCar)
+		w.WriteHeader(http.StatusCreated)
+	case "PUT":
+		// Логика для обновления автомобиля
+	case "DELETE":
+		// Логика для удаления автомобиля
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
 }

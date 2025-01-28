@@ -170,3 +170,81 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
+document.getElementById('addCarForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const carName = document.getElementById('carName').value;
+    const carPrice = parseInt(document.getElementById('carPrice').value, 10);
+    const carCategory = document.getElementById('carCategory').value;
+
+    try {
+        const response = await fetch('/admin/cars', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Role': 'admin', // Имитация отправки роли, заменить на реальный механизм аутентификации
+            },
+            body: JSON.stringify({ Model: carName, Price: carPrice, Category: carCategory }),
+        });
+
+        if (response.ok) {
+            alert('Car added successfully!');
+        } else {
+            alert('Failed to add car');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+});
+
+document.getElementById("addCarForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const carName = document.getElementById("carName").value;
+    const carPrice = document.getElementById("carPrice").value;
+    const carCategory = document.getElementById("carCategory").value;
+
+    const response = await fetch("/api/cars/add", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            name: carName,
+            price: parseInt(carPrice),
+            category: carCategory,
+        }),
+    });
+
+    if (response.ok) {
+        alert("Car added successfully!");
+        document.getElementById("addCarForm").reset();
+    } else {
+        alert("Failed to add car!");
+    }
+});
+
+async function loadCars() {
+    const response = await fetch("/api/cars");
+    if (response.ok) {
+        const cars = await response.json();
+        const carList = document.getElementById("carList");
+        carList.innerHTML = ""; // Очистка списка перед обновлением
+
+        cars.forEach((car) => {
+            const carItem = document.createElement("div");
+            carItem.className = "car-item";
+            carItem.innerHTML = `
+                <h3>${car.name}</h3>
+                <p>Price: $${car.price}</p>
+                <p>Category: ${car.category}</p>
+            `;
+            carList.appendChild(carItem);
+        });
+    } else {
+        console.error("Failed to load cars.");
+    }
+}
+
+// Загрузка машин при загрузке страницы
+document.addEventListener("DOMContentLoaded", loadCars);
