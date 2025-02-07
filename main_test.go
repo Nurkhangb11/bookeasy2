@@ -1,143 +1,144 @@
 package main
 
 import (
-	"bytes"
-	"database/sql"
-	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
-	_ "github.com/lib/pq"
+	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/stretchr/testify/assert"
+	"github.com/tebeka/selenium"
+	"github.com/tebeka/selenium/chrome"
 )
 
-const testConnStr = "host=localhost port=5432 user=postgres password=123olx123 dbname=hotel_booking sslmode=disable"
+// Мок для отправки email
+type MockEmailSender struct{}
 
-// TestConnectToDatabase — unit-тест для проверки подключения к базе данных
-func TestConnectToDatabase(t *testing.T) {
-	db, err := sql.Open("postgres", testConnStr)
-	if err != nil {
-		t.Fatalf("Не удалось подключиться к базе данных: %v", err)
-	}
-	defer db.Close()
-
-	if err := db.Ping(); err != nil {
-		t.Fatalf("База данных недоступна: %v", err)
-	}
-	t.Log("Подключение к базе данных прошло успешно")
+func (m *MockEmailSender) SendEmail(to []string, subject, body string) error {
+	// Ничего не делаем, просто возвращаем успех
+	return nil
 }
 
-// TestIntegration_RegisterAndLogin — интеграционный тест для регистрации и авторизации
-func TestIntegration_RegisterAndLogin(t *testing.T) {
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
-		var user struct {
-			FirstName string `json:"first_name"`
-			LastName  string `json:"last_name"`
-			Email     string `json:"email"`
-			Password  string `json:"password"`
-		}
-		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-			http.Error(w, "Ошибка декодирования JSON", http.StatusBadRequest)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-	})
-
-	mux.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
-		var credentials struct {
-			Email    string `json:"email"`
-			Password string `json:"password"`
-		}
-		if err := json.NewDecoder(r.Body).Decode(&credentials); err != nil {
-			http.Error(w, "Ошибка декодирования JSON", http.StatusBadRequest)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-	})
-
-	server := httptest.NewServer(mux)
-	defer server.Close()
-
-	registerPayload := `{"first_name":"Alice","last_name":"Smith","email":"integration@example.com","password":"securepassword"}`
-	registerResp, err := http.Post(server.URL+"/register", "application/json", bytes.NewBufferString(registerPayload))
+// Тест для handleRegister с использованием sqlmock и мока для отправки email
+func TestHandleRegister(t *testing.T) {
+	// Создаем мок базы данных
+	mockDB, mock, err := sqlmock.New()
 	if err != nil {
-		t.Fatalf("Ошибка выполнения запроса на регистрацию: %v", err)
+		t.Fatalf("Ошибка создания мока: %v", err)
 	}
-	defer registerResp.Body.Close()
+	defer mockDB.Close()
 
-	if registerResp.StatusCode != http.StatusOK {
-		t.Fatalf("Регистрация провалилась с кодом: %v", registerResp.StatusCode)
-	}
+	// Подменяем глобальную переменную db на мок
+	db = mockDB
 
-	loginPayload := `{"email":"integration@example.com","password":"securepassword"}`
-	loginResp, err := http.Post(server.URL+"/login", "application/json", bytes.NewBufferString(loginPayload))
+	// Подменяем глобальную переменную emailSender на мок
+	emailSender = &MockEmailSender{}
+
+	// Ожидаем, что будет выполнен запрос INSERT
+	mock.ExpectExec("INSERT INTO users").
+		WithArgs("John", "Doe", "john.doe@example.com", "password123", sqlmock.AnyArg()).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	// Подготовка тестовых данных
+	payload := `{"first_name":"John","last_name":"Doe","email":"john.doe@example.com","password":"password123"}`
+	req, err := http.NewRequest("POST", "/register", strings.NewReader(payload))
 	if err != nil {
-		t.Fatalf("Ошибка выполнения запроса на логин: %v", err)
+		t.Fatal(err)
 	}
-	defer loginResp.Body.Close()
 
-	if loginResp.StatusCode != http.StatusOK {
-		t.Fatalf("Авторизация провалилась с кодом: %v", loginResp.StatusCode)
+	// Создание ResponseRecorder для записи ответа
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(handleRegister)
+
+	// Вызов обработчика
+	handler.ServeHTTP(rr, req)
+
+	// Проверка статуса ответа
+	assert.Equal(t, http.StatusOK, rr.Code, "Ожидался статус 200")
+
+	// Проверка тела ответа
+	expected := `{"status":"success","message":"Пользователь успешно зарегистрирован. Проверьте email для подтверждения."}`
+	assert.JSONEq(t, expected, rr.Body.String(), "Неверный ответ сервера")
+
+	// Проверка, что все ожидания выполнены
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("Невыполненные ожидания: %v", err)
 	}
-	t.Log("Интеграционный тест регистрации и авторизации прошёл успешно")
+
+	// Вывод сообщения о том, что запрос был успешно обработан
+	t.Log("Запрос на регистрацию пользователя успешно обработан")
 }
 
-// TestE2E_RegisterAndLogin — end-to-end тест для регистрации и авторизации
-func TestE2E_RegisterAndLogin(t *testing.T) {
-	mux := http.NewServeMux()
+// Тест для end-to-end сценария регистрации пользователя
+func TestUserRegistrationE2E(t *testing.T) {
+	// Настройка Selenium WebDriver
+	caps := selenium.Capabilities{"browserName": "chrome"}
+	chromeCaps := chrome.Capabilities{
+		Path: "", // Укажите путь к ChromeDriver, если он не в PATH
+	}
+	caps.AddChrome(chromeCaps)
 
-	mux.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
-		var user struct {
-			FirstName string `json:"first_name"`
-			LastName  string `json:"last_name"`
-			Email     string `json:"email"`
-			Password  string `json:"password"`
-		}
-		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-			http.Error(w, "Ошибка декодирования JSON", http.StatusBadRequest)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-	})
-
-	mux.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
-		var credentials struct {
-			Email    string `json:"email"`
-			Password string `json:"password"`
-		}
-		if err := json.NewDecoder(r.Body).Decode(&credentials); err != nil {
-			http.Error(w, "Ошибка декодирования JSON", http.StatusBadRequest)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-	})
-
-	server := httptest.NewServer(mux)
-	defer server.Close()
-
-	registerPayload := `{"first_name":"E2E","last_name":"User","email":"e2e@example.com","password":"e2epassword"}`
-	registerResp, err := http.Post(server.URL+"/register", "application/json", bytes.NewBufferString(registerPayload))
+	// Запуск WebDriver
+	wd, err := selenium.NewRemote(caps, "")
 	if err != nil {
-		t.Fatalf("Ошибка выполнения запроса на регистрацию: %v", err)
+		t.Fatalf("Ошибка запуска WebDriver: %v", err)
 	}
-	defer registerResp.Body.Close()
+	defer wd.Quit()
 
-	if registerResp.StatusCode != http.StatusOK {
-		t.Fatalf("Регистрация провалилась с кодом: %v", registerResp.StatusCode)
+	// Открываем страницу регистрации
+	if err := wd.Get("http://localhost:8080/register"); err != nil {
+		t.Fatalf("Ошибка открытия страницы регистрации: %v", err)
 	}
 
-	loginPayload := `{"email":"e2e@example.com","password":"e2epassword"}`
-	loginResp, err := http.Post(server.URL+"/login", "application/json", bytes.NewBufferString(loginPayload))
+	// Заполняем форму регистрации
+	firstNameInput, err := wd.FindElement(selenium.ByID, "first_name")
 	if err != nil {
-		t.Fatalf("Ошибка выполнения запроса на логин: %v", err)
+		t.Fatalf("Ошибка поиска поля first_name: %v", err)
 	}
-	defer loginResp.Body.Close()
+	firstNameInput.SendKeys("John")
 
-	if loginResp.StatusCode != http.StatusOK {
-		t.Fatalf("Авторизация провалилась с кодом: %v", loginResp.StatusCode)
+	lastNameInput, err := wd.FindElement(selenium.ByID, "last_name")
+	if err != nil {
+		t.Fatalf("Ошибка поиска поля last_name: %v", err)
 	}
-	t.Log("E2E тест регистрации и авторизации прошёл успешно")
+	lastNameInput.SendKeys("Doe")
+
+	emailInput, err := wd.FindElement(selenium.ByID, "email")
+	if err != nil {
+		t.Fatalf("Ошибка поиска поля email: %v", err)
+	}
+	emailInput.SendKeys("john.doe@example.com")
+
+	passwordInput, err := wd.FindElement(selenium.ByID, "password")
+	if err != nil {
+		t.Fatalf("Ошибка поиска поля password: %v", err)
+	}
+	passwordInput.SendKeys("password123")
+
+	// Нажимаем кнопку регистрации
+	registerButton, err := wd.FindElement(selenium.ByID, "register-button")
+	if err != nil {
+		t.Fatalf("Ошибка поиска кнопки регистрации: %v", err)
+	}
+	registerButton.Click()
+
+	// Проверяем, что регистрация прошла успешно
+	successMessage, err := wd.FindElement(selenium.ByID, "success-message")
+	if err != nil {
+		t.Fatalf("Ошибка поиска сообщения об успешной регистрации: %v", err)
+	}
+
+	text, err := successMessage.Text()
+	if err != nil {
+		t.Fatalf("Ошибка получения текста сообщения: %v", err)
+	}
+
+	expected := "Пользователь успешно зарегистрирован. Проверьте email для подтверждения."
+	if text != expected {
+		t.Errorf("Ожидалось сообщение '%s', получено '%s'", expected, text)
+	}
+
+	// Вывод сообщения о том, что E2E тест завершен
+	t.Log("End-to-End тест регистрации пользователя успешно завершен")
 }
-
